@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'UserManagement',
+    'UserManagement','societies',
     "rest_framework",
     'drf_expiring_token'
 ]

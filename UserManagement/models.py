@@ -34,10 +34,10 @@ class MyAccountManager(BaseUserManager):
         user.save(using=self._db)
 
 class user_roles(models.Model):
-    role=models.CharField(max_length=264)
-    role_short=models.CharField(max_length=264)
-    created_at = models.DateTimeField(editable=False)
-    updated_at = models.DateTimeField()
+    role=models.CharField(max_length=264,null=True,blank=True)
+    role_short=models.CharField(max_length=264,null=True,blank=True)
+    created_at = models.DateTimeField(editable=False,null=True,blank=True)
+    updated_at = models.DateTimeField(null=True,blank=True)
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
@@ -82,8 +82,8 @@ class Users(AbstractBaseUser,PermissionsMixin):
     user_signs = models.ImageField(null=True,blank=True),
     status=models.IntegerField(null=True,blank=True)
     comments=models.CharField(max_length=2640,null=True,blank=True)
-    created_at = models.DateTimeField(editable=False)
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''

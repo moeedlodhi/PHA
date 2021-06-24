@@ -9,8 +9,8 @@ class zones(models.Model):
     zone=models.CharField(max_length=264)
     shortcode=models.CharField(max_length=264)
     call_center_no=models.CharField(max_length=264)
-    created_at = models.DateTimeField(editable=False)
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
@@ -28,8 +28,8 @@ class society(models.Model):
     letterPrefix = models.CharField(max_length=264, null=True, blank=True)
     description = models.CharField(max_length=264, null=True, blank=True)
     status=models.IntegerField(blank=True,null=True)
-    created_at = models.DateTimeField(editable=False)
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
@@ -44,8 +44,8 @@ class user_societies(models.Model):
     user_id=models.ForeignKey(Users,related_name='UserSocieties',on_delete=models.CASCADE)
     role_id=models.ForeignKey(user_roles,related_name='RoleSocieties',on_delete=models.CASCADE)
     status=models.IntegerField()
-    created_at = models.DateTimeField(editable=False)
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
@@ -61,8 +61,8 @@ class society_settings(models.Model):
     setting_key=models.CharField(max_length=264,null=True,blank=True)
     setting_value=models.FloatField(null=True,blank=True)
     status=models.IntegerField(null=True,blank=True)
-    created_at = models.DateTimeField(editable=False)
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
@@ -71,4 +71,30 @@ class society_settings(models.Model):
         self.modified_at = timezone.now()
         return super(society_settings, self).save(*args, **kwargs)
 
-# Create your models here.
+# Remember to add your foreign keys here
+class sms_log(models.Model):
+    society_id=models.ForeignKey(society,on_delete=models.CASCADE,related_name='SocietySMS')
+    # letter_id=models.ForeignKey()
+    # member_id=models.ForeignKey()
+    phone_number=models.CharField(max_length=264,null=True,blank=True)
+    sms_code=models.CharField(max_length=264,null=True,blank=True)
+    network=models.CharField(max_length=264,null=True,blank=True)
+    received_message=models.TextField(max_length=10000,null=True,blank=True)
+    response_message = models.TextField(max_length=10000, null=True, blank=True)
+    sms_sent=models.BooleanField(null=True,blank=True)
+    is_billed=models.BooleanField(null=True,blank=True)
+    billed_date=models.DateTimeField(null=True,blank=True)
+
+    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created_at = timezone.now()
+        self.modified_at = timezone.now()
+        return super(sms_log, self).save(*args, **kwargs)
+
+
+
+
