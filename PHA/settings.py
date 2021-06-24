@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'UserManagement','societies',
+    'UserManagement','societies','process',
     "rest_framework",
     'drf_expiring_token'
 ]
@@ -93,25 +93,37 @@ pymysql.install_as_MySQLdb()
 #     }
 # }
 
+
 DATABASES = {
-
     'default': {
-
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-
-        'NAME': 'PHA',
-
-        'USER': 'postgres',
-
-        'PASSWORD': 'postgres',
-
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'fda_live364',
+        'USER': 'golden',
+        'PASSWORD': 'password',
         'HOST': '127.0.0.1',
-
-        'PORT': '5432',
-
+        'PORT': '3306',
     }
-
 }
+
+# DATABASES = {
+#
+#     'default': {
+#
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#
+#         'NAME': 'PHA',
+#
+#         'USER': 'postgres',
+#
+#         'PASSWORD': 'postgres',
+#
+#         'HOST': '127.0.0.1',
+#
+#         'PORT': '5432',
+#
+#     }
+#
+# }
 
 
 
