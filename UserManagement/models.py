@@ -2,8 +2,11 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.utils import timezone
+
 import time
 # Create your models here.
+
+
 class MyAccountManager(BaseUserManager):
     def create_user(self,username,password=None
                     ):
@@ -66,6 +69,7 @@ class Users(AbstractBaseUser,PermissionsMixin):
     is_admin=models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_staff=models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
     admin_id=models.IntegerField(default=1)
     role_id=models.ForeignKey(user_roles,related_name='roles',on_delete=models.CASCADE,null=True,blank=True)
     first_name=models.CharField(max_length=264,null=True,blank=True)
@@ -90,6 +94,10 @@ class Users(AbstractBaseUser,PermissionsMixin):
         if not self.id:
             self.created_at = timezone.now()
         self.modified_at = timezone.now()
+
+        if self.role_id=='' or self.role_id==None:
+            self.is_deleted=True
+
         return super(Users, self).save(*args, **kwargs)
 
 
@@ -109,6 +117,30 @@ class Users(AbstractBaseUser,PermissionsMixin):
     def has_perm(self, perm, obj=None): return self.is_superuser
 
     def has_module_perms(self, app_label): return self.is_superuser
+
+
+
+
+class settings(models.Model):
+    user_id=models.ForeignKey(Users,on_delete=models.CASCADE,related_name='settingsUsers',null=True,blank=True)
+    setting_key=models.CharField(max_length=264,null=True,blank=True)
+    setting_value = models.CharField(max_length=264, null=True, blank=True)
+    is_deleted=models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created_at = timezone.now()
+        self.modified_at = timezone.now()
+
+
+
+        return super(settings, self).save(*args, **kwargs)
+
+
 
 
 
