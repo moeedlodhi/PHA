@@ -21,7 +21,7 @@ class zones(models.Model):
 
 
 class society(models.Model):
-    zone_id=models.ForeignKey(zones,related_name='ZoneSociety',on_delete=models.SET_NULL,null=True,blank=True)
+    zone_id=models.ForeignKey(zones,related_name='ZoneSociety',on_delete=models.CASCADE,null=True,blank=True)
     name=models.CharField(max_length=264)
     logo=models.ImageField(null=True,blank=True)
     smsPrefix=models.CharField(max_length=264,null=True,blank=True)
@@ -38,17 +38,14 @@ class society(models.Model):
             self.created_at = timezone.now()
         self.modified_at = timezone.now()
 
-        if self.zone_id=='' or self.zone_id==None:
-            self.is_deleted=True
-
 
         return super(society, self).save(*args, **kwargs)
 
 
 class user_societies(models.Model):
-    society_id=models.ForeignKey(society,on_delete=models.SET_NULL,null=True,blank=True,related_name='UserSocieties')
-    user_id=models.ForeignKey(Users,related_name='UserSocieties',on_delete=models.SET_NULL,null=True,blank=True)
-    role_id=models.ForeignKey(user_roles,related_name='RoleSocieties',on_delete=models.SET_NULL,null=True,blank=True)
+    society_id=models.ForeignKey(society,on_delete=models.CASCADE,null=True,blank=True,related_name='UserSocieties')
+    user_id=models.ForeignKey(Users,related_name='UserSocieties',on_delete=models.CASCADE,null=True,blank=True)
+    role_id=models.ForeignKey(user_roles,related_name='RoleSocieties',on_delete=models.CASCADE,null=True,blank=True)
     status=models.IntegerField()
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
@@ -60,9 +57,6 @@ class user_societies(models.Model):
         if not self.id:
             self.created_at = timezone.now()
         self.modified_at = timezone.now()
-
-        if self.society_id=='' or self.society_id==None:
-            self.is_deleted=True
 
 
         return super(user_societies, self).save(*args, **kwargs)
@@ -84,15 +78,12 @@ class society_settings(models.Model):
             self.created_at = timezone.now()
         self.modified_at = timezone.now()
 
-        if self.society_id=='' or self.society_id==None:
-            self.is_deleted=True
-
 
         return super(society_settings, self).save(*args, **kwargs)
 
 # Remember to add your foreign keys here
 class sms_log(models.Model):
-    society_id=models.ForeignKey(society,on_delete=models.SET_NULL,related_name='SocietySMS',null=True,blank=True)
+    society_id=models.ForeignKey(society,on_delete=models.CASCADE,related_name='SocietySMS',null=True,blank=True)
     # letter_id=models.ForeignKey()
     # member_id=models.ForeignKey()
     phone_number=models.CharField(max_length=264,null=True,blank=True)
@@ -113,8 +104,7 @@ class sms_log(models.Model):
             self.created_at = timezone.now()
         self.modified_at = timezone.now()
 
-        if self.society_id=='' or self.society_id==None:
-            self.is_deleted=True
+
 
 
         return super(sms_log, self).save(*args, **kwargs)
@@ -122,7 +112,7 @@ class sms_log(models.Model):
 
 
 class report_zone_process(models.Model):
-    zone_id=models.ForeignKey(zones,on_delete=models.SET_NULL,null=True,blank=True)
+    zone_id=models.ForeignKey(zones,on_delete=models.CASCADE,null=True,blank=True)
     total_process=models.IntegerField(null=True,blank=True)
     total_pending = models.IntegerField(null=True, blank=True)
     total_cancelled=models.IntegerField(null=True, blank=True)
@@ -138,8 +128,7 @@ class report_zone_process(models.Model):
             self.created_at = timezone.now()
         self.modified_at = timezone.now()
 
-        if self.zone_id=='' or self.zone_id==None:
-            self.is_deleted=True
+
 
 
         return super(report_zone_process, self).save(*args, **kwargs)
@@ -147,10 +136,10 @@ class report_zone_process(models.Model):
 
 
 class report_user_process(models.Model):
-    zone_id=models.ForeignKey(zones,on_delete=models.SET_NULL,null=True,blank=True)
-    society_id=models.ForeignKey(society,on_delete=models.SET_NULL,null=True,blank=True)
-    user_id=models.ForeignKey(Users,on_delete=models.SET_NULL,null=True,blank=True)
-    user_role=models.ForeignKey(user_roles,on_delete=models.SET_NULL,null=True,blank=True)
+    zone_id=models.ForeignKey(zones,on_delete=models.CASCADE,null=True,blank=True)
+    society_id=models.ForeignKey(society,on_delete=models.CASCADE,null=True,blank=True)
+    user_id=models.ForeignKey(Users,on_delete=models.CASCADE,null=True,blank=True)
+    user_role=models.ForeignKey(user_roles,on_delete=models.CASCADE,null=True,blank=True)
     total_process = models.IntegerField(null=True, blank=True)
     total_pending = models.IntegerField(null=True, blank=True)
     total_approved = models.IntegerField(null=True, blank=True)
@@ -167,16 +156,14 @@ class report_user_process(models.Model):
             self.created_at = timezone.now()
         self.modified_at = timezone.now()
 
-        if self.society_id=='' or self.society_id==None or self.user_id=='' or self.user_id==None:
-            self.is_deleted=True
 
 
         return super(report_user_process, self).save(*args, **kwargs)
 
 
 class report_society_process(models.Model):
-    zone_id=models.ForeignKey(zones,on_delete=models.SET_NULL,null=True,blank=True)
-    society_id=models.ForeignKey(society,on_delete=models.SET_NULL,null=True,blank=True)
+    zone_id=models.ForeignKey(zones,on_delete=models.CASCADE,null=True,blank=True)
+    society_id=models.ForeignKey(society,on_delete=models.CASCADE,null=True,blank=True)
     total_process = models.IntegerField(null=True, blank=True)
     total_pending = models.IntegerField(null=True, blank=True)
     total_approved = models.IntegerField(null=True, blank=True)
@@ -193,8 +180,6 @@ class report_society_process(models.Model):
             self.created_at = timezone.now()
         self.modified_at = timezone.now()
 
-        if self.zone_id=='' or self.zone_id==None or self.society_id=='' or self.society_id=='None':
-            self.is_deleted=True
 
 
 

@@ -71,7 +71,7 @@ class Users(AbstractBaseUser,PermissionsMixin):
     is_staff=models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     admin_id=models.IntegerField(default=1)
-    role_id=models.ForeignKey(user_roles,related_name='roles',on_delete=models.SET_NULL,null=True,blank=True)
+    role_id=models.ForeignKey(user_roles,related_name='roles',on_delete=models.CASCADE,null=True,blank=True)
     first_name=models.CharField(max_length=264,null=True,blank=True)
     middle_name=models.CharField(max_length=264,null=True,blank=True)
     last_name = models.CharField(max_length=264,null=True,blank=True)
@@ -122,7 +122,7 @@ class Users(AbstractBaseUser,PermissionsMixin):
 
 
 class settings(models.Model):
-    user_id=models.ForeignKey(Users,on_delete=models.SET_NULL,related_name='settingsUsers',null=True,blank=True)
+    user_id=models.ForeignKey(Users,on_delete=models.CASCADE,related_name='settingsUsers',null=True,blank=True)
     setting_key=models.CharField(max_length=264,null=True,blank=True)
     setting_value = models.CharField(max_length=264, null=True, blank=True)
     is_deleted=models.BooleanField(default=False)
@@ -136,8 +136,7 @@ class settings(models.Model):
             self.created_at = timezone.now()
         self.modified_at = timezone.now()
 
-        if self.user_id=='' or self.user_id==None:
-            self.is_deleted=True
+
 
         return super(settings, self).save(*args, **kwargs)
 

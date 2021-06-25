@@ -40,10 +40,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'UserManagement','societies','process',
     "rest_framework",
     'drf_expiring_token'
 ]
+
+LOCAL_APPS=['UserManagement','societies','process','plots','members']
+
+INSTALLED_APPS=INSTALLED_APPS+LOCAL_APPS
+
+
 EXPIRING_TOKEN_DURATION=timedelta(hours=1)
 
 MIDDLEWARE = [
