@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'drf_expiring_token'
 ]
 
-LOCAL_APPS=['UserManagement','societies','process','plots','members']
+LOCAL_APPS=['UserManagement','societies','process','fees','bio']
 
 INSTALLED_APPS=INSTALLED_APPS+LOCAL_APPS
 
@@ -91,24 +91,24 @@ import pymysql
 
 pymysql.install_as_MySQLdb()
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
-
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'fda_live364',
-        'USER': 'golden',
-        'PASSWORD': 'password',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'fda_live364',
+#         'USER': 'golden',
+#         'PASSWORD': 'password',
+#         'HOST': '127.0.0.1',
+#         'PORT': '3306',
+#     }
+# }
 
 # DATABASES = {
 #

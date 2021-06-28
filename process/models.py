@@ -11,11 +11,15 @@ class process_types(models.Model):
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
 
+
+    class Meta:
+        db_table = "process_types"
+
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
             self.created_at = timezone.now()
-        self.modified_at = timezone.now()
+        self.updated_at = timezone.now()
         return super(process_types, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -29,11 +33,15 @@ class process_types_meta(models.Model):
     updated_at = models.DateTimeField(null=True, blank=True)
     is_deleted=models.BooleanField(default=False)
 
+
+    class Meta:
+        db_table = "process_types_meta"
+
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
             self.created_at = timezone.now()
-        self.modified_at = timezone.now()
+        self.updated_at = timezone.now()
 
 
         return super(process_types, self).save(*args, **kwargs)
@@ -62,11 +70,14 @@ class process(models.Model):
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        db_table = "process"
+
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
             self.created_at = timezone.now()
-        self.modified_at = timezone.now()
+        self.updated_at = timezone.now()
 
 
         return super(process, self).save(*args, **kwargs)

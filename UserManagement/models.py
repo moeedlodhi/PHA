@@ -93,7 +93,7 @@ class Users(AbstractBaseUser,PermissionsMixin):
         ''' On save, update timestamps '''
         if not self.id:
             self.created_at = timezone.now()
-        self.modified_at = timezone.now()
+        self.updated_at = timezone.now()
 
         if self.role_id=='' or self.role_id==None:
             self.is_deleted=True
@@ -102,7 +102,7 @@ class Users(AbstractBaseUser,PermissionsMixin):
 
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
+
 
 
     objects = MyAccountManager()
@@ -130,11 +130,15 @@ class settings(models.Model):
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        db_table = "settings"
+
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
             self.created_at = timezone.now()
-        self.modified_at = timezone.now()
+        self.updated_at = timezone.now()
+
 
 
 
