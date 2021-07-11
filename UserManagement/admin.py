@@ -9,7 +9,7 @@ class UserAdmin(UserAdmin):
     list_filter = ('is_admin',)
 
     fieldsets = (
-        (None, {'fields': ('username', 'email','password','gender')}),
+        (None, {'fields': ('username', 'email','password','gender',"profile_pic")}),
 
         ('Permissions', {'fields': ('is_admin','is_staff','is_superuser','is_active')}),
     )

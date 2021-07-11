@@ -42,6 +42,9 @@ class user_roles(models.Model):
     created_at = models.DateTimeField(editable=False,null=True,blank=True)
     updated_at = models.DateTimeField(null=True,blank=True)
 
+    class Meta:
+        db_table = "user_roles"
+
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
@@ -65,6 +68,7 @@ CHOICE_GENDER=(('male','male'),
 class Users(AbstractBaseUser,PermissionsMixin):
     username= models.CharField(max_length=30,unique=True)
     email=models.EmailField()
+    profile_pic=models.ImageField(null=True,blank=True)
     is_active = models.BooleanField(default=True)
     is_admin=models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
@@ -108,7 +112,7 @@ class Users(AbstractBaseUser,PermissionsMixin):
     objects = MyAccountManager()
 
     class Meta:
-        db_table = "tbl_users"
+        db_table = "users"
 
     def __str__(self):
         return str(self.email)

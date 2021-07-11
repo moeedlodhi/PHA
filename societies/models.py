@@ -332,7 +332,7 @@ class member_employee_info(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     class Meta:
-        db_table = "nmember_employee_info"
+        db_table = "member_employee_info"
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''

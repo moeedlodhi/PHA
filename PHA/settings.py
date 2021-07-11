@@ -15,8 +15,12 @@ from datetime import datetime, timedelta
 
 from pathlib import Path
 
+
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -28,7 +32,7 @@ SECRET_KEY = 'django-insecure-8s_%4xcb_^&pej@raw=v2k6aup4_f!yjuzx1vu_k6hm=rzii_2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
@@ -41,15 +45,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "rest_framework",
-    'drf_expiring_token'
+    "rest_framework.authtoken"
 ]
 
 LOCAL_APPS=['UserManagement','societies','process','fees','bio']
 
 INSTALLED_APPS=INSTALLED_APPS+LOCAL_APPS
 
-
-EXPIRING_TOKEN_DURATION=timedelta(hours=1)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -91,12 +93,12 @@ import pymysql
 
 pymysql.install_as_MySQLdb()
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
 
 
 # DATABASES = {
@@ -110,25 +112,25 @@ DATABASES = {
 #     }
 # }
 
-# DATABASES = {
-#
-#     'default': {
-#
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#
-#         'NAME': 'PHA',
-#
-#         'USER': 'postgres',
-#
-#         'PASSWORD': 'postgres',
-#
-#         'HOST': '127.0.0.1',
-#
-#         'PORT': '5432',
-#
-#     }
-#
-# }
+DATABASES = {
+
+    'default': {
+
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+
+        'NAME': 'PHA',
+
+        'USER': 'postgres',
+
+        'PASSWORD': 'postgres',
+
+        'HOST': '127.0.0.1',
+
+        'PORT': '5432',
+
+    }
+
+}
 
 
 
@@ -177,7 +179,7 @@ PASSWORD_HASHERS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'drf_expiring_token.authentication.ExpiringTokenAuthentication'
+        'rest_framework.authentication.TokenAuthentication'
     ],
 'DEFAULT_PERMISSION_CLASSES': [
     'rest_framework.permissions.IsAuthenticated',
@@ -189,6 +191,11 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+MEDIA_URL='/media/'
+
+MEDIA_ROOT =os.path.join(BASE_DIR,'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
