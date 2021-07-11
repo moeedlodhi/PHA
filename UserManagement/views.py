@@ -55,6 +55,9 @@ def facedect(loc):
 
         loc = (str(MEDIA_ROOT) + loc)
         face_1_image = face_recognition.load_image_file(loc)
+        print(loc)
+        print(face_1_image)
+        print(face_1_image)
         face_1_face_encoding = face_recognition.face_encodings(face_1_image)[0]
 
         #
