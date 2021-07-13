@@ -6,7 +6,6 @@ from UserManagement import views
 
 urlpatterns = [
     path("login/", views.login_user),
-    path('copy/',views.mysqlToPG)
-
-
+    path("logout/", views.logout_user),
+    path('copy/', views.mysqlToPG),
 ]

@@ -23,7 +23,7 @@ from django.views.decorators.csrf import csrf_exempt
 from UserManagement.models import Users
 
 # from UserManagement.models import email_user,Users
-from django.core.mail import send_mail,EmailMessage
+from django.core.mail import send_mail, EmailMessage
 from django.core.mail import EmailMessage
 from django.contrib.auth.hashers import check_password
 from django.http import HttpResponse
@@ -51,7 +51,7 @@ def facedect(loc):
     if s:
 
 
-        MEDIA_ROOT =os.path.join(BASE_DIR,'media')
+        MEDIA_ROOT =os.path.join(BASE_DIR)
 
         loc = (str(MEDIA_ROOT) + loc)
         face_1_image = face_recognition.load_image_file(loc)
@@ -124,12 +124,21 @@ def login_user(request):
         else:
             raise ValidationError({"Error": f'Account doesnt exist'})
 
+
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def logout_user(request):
+    request.user.auth_token.delete()
+    logout(request)
+    return JsonResponse({"Message": "User Successfully logout !!!"})
+
+
 @api_view(["GET"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([AllowAny])
 def mysqlToPG(request):
     user_role = pd.read_csv('/home/moeed/Downloads/user_roles.csv')
-    
     for key, value in user_role.items():
         pass
     return Response('happy')
