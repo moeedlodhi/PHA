@@ -39,46 +39,10 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.db import IntegrityError
 from rest_framework.authentication import TokenAuthentication
 from django.http import JsonResponse
-import face_recognition
-import cv2
-import os
-from PHA.settings import BASE_DIR
+from UserManagement.utils import face_recognize
 
 
-def facedect(loc):
-    cam = cv2.VideoCapture(0)
-    s, img = cam.read()
-    if s:
-
-
-        MEDIA_ROOT =os.path.join(BASE_DIR,'media')
-
-        loc = (str(MEDIA_ROOT) + loc)
-        face_1_image = face_recognition.load_image_file(loc)
-        print(loc)
-        print(face_1_image)
-        print(face_1_image)
-        face_1_face_encoding = face_recognition.face_encodings(face_1_image)[0]
-
-        #
-
-        small_frame = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
-
-        rgb_small_frame = small_frame[:, :, ::-1]
-
-        face_locations = face_recognition.face_locations(rgb_small_frame)
-        face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
-
-        check = face_recognition.compare_faces(face_1_face_encoding, face_encodings)
-
-        print(check)
-        if check[0]:
-            return True
-
-        else:
-            return False
-
-        # Create your views here.
+# Create your views here.
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @authentication_classes([TokenAuthentication])
@@ -104,7 +68,7 @@ def login_user(request):
             if Account.is_active:
                 print(Account.profile_pic.url)
 
-                if facedect(Account.profile_pic.url):
+                if face_recognize(Account.profile_pic.url):
                     print('am i here?')
 
 
