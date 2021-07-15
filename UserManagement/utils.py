@@ -1,9 +1,11 @@
+from datetime import timedelta
 import os
 
 # import cv2
+from django.utils import timezone
 import face_recognition
 
-from PHA.settings import BASE_DIR
+from PHA.settings import BASE_DIR, TOKEN_EXPIRED_AFTER_SECONDS
 
 
 def face_recognize(loc):
@@ -32,9 +34,18 @@ def face_recognize(loc):
 
         check = face_recognition.compare_faces([face_1_face_encoding], face_2_face_encoding)
 
-        print(check)
         if check[0]:
             return True
 
         else:
             return False
+
+
+# If token is expired then it will be removed
+def token_expire_handler(token):
+    time_elapsed = timezone.now() - token.created
+    left_time = timedelta(seconds=TOKEN_EXPIRED_AFTER_SECONDS) - time_elapsed
+    is_expired = left_time < timedelta(seconds=0)
+    if is_expired:
+        token.delete()
+    return is_expired
