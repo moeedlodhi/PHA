@@ -1,5 +1,5 @@
 from django.contrib import admin
-from UserManagement.models import Users
+from UserManagement.models import Users,settings
 from django.contrib.auth.admin import UserAdmin
 
 class UserAdmin(UserAdmin):
@@ -9,7 +9,7 @@ class UserAdmin(UserAdmin):
     list_filter = ('is_admin',)
 
     fieldsets = (
-        (None, {'fields': ('username', 'email','password','gender',"profile_pic")}),
+        (None, {'fields': ('username', 'email','password','gender',"profile_pic","role","role_id","first_name","last_name","created_at","updated_at","last_login")}),
 
         ('Permissions', {'fields': ('is_admin','is_staff','is_superuser','is_active')}),
     )
@@ -21,5 +21,6 @@ class UserAdmin(UserAdmin):
 
 
 admin.site.register(Users,UserAdmin)
+admin.site.register(settings)
 
 # Register your models here.

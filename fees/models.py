@@ -12,6 +12,7 @@ class installments(models.Model):
     plot_id=models.ForeignKey(plots, on_delete=models.CASCADE, related_name='plotinstallments', null=True, blank=True)
     user_id = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='userID', null=True,
                                 blank=True)
+    mysql_id=models.IntegerField(null=True,blank=True)
     approved_by=models.IntegerField(null=True,blank=True)
     member_id = models.ForeignKey(members, on_delete=models.CASCADE, related_name='MembersInstallments', null=True,
                                   blank=True)
@@ -33,13 +34,13 @@ class installments(models.Model):
     class Meta:
         db_table = "installments"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-        return super(installments, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #     return super(installments, self).save(*args, **kwargs)
 
 
 class fee_structure(models.Model):

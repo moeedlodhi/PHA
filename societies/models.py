@@ -51,13 +51,14 @@ class society(models.Model):
 
 
 class user_societies(models.Model):
+    mysqlid=models.IntegerField(null=True,blank=True)
     society_id=models.ForeignKey(society,on_delete=models.CASCADE,null=True,blank=True,related_name='UserSocieties')
     user_id=models.ForeignKey(Users,related_name='UserSocieties',on_delete=models.CASCADE,null=True,blank=True)
     role_id=models.ForeignKey(user_roles,related_name='RoleSocieties',on_delete=models.CASCADE,null=True,blank=True)
     status=models.IntegerField()
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
-    is_deleted=True
+    is_deleted=models.BooleanField(default=False)
 
     class Meta:
         db_table = "user_societies"
@@ -105,10 +106,11 @@ class report_zone_process(models.Model):
     zone_id=models.ForeignKey(zones,on_delete=models.CASCADE,null=True,blank=True)
     total_process=models.IntegerField(null=True,blank=True)
     total_pending = models.IntegerField(null=True, blank=True)
+    total_approved = models.IntegerField(null=True, blank=True)
     total_cancelled=models.IntegerField(null=True, blank=True)
     total_rejected=models.IntegerField(null=True,blank=True)
     process_types_total=models.CharField(max_length=10000,null=True,blank=True)
-    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    created_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     is_deleted=models.BooleanField(default=False)
 
@@ -132,13 +134,13 @@ class report_user_process(models.Model):
     zone_id=models.ForeignKey(zones,on_delete=models.CASCADE,null=True,blank=True)
     society_id=models.ForeignKey(society,on_delete=models.CASCADE,null=True,blank=True)
     user_id=models.ForeignKey(Users,on_delete=models.CASCADE,null=True,blank=True)
-    user_role=models.ForeignKey(user_roles,on_delete=models.CASCADE,null=True,blank=True)
+    user_role=models.CharField(max_length=264,null=True,blank=True)
     total_process = models.IntegerField(null=True, blank=True)
     total_pending = models.IntegerField(null=True, blank=True)
     total_approved = models.IntegerField(null=True, blank=True)
     total_cancelled = models.IntegerField(null=True, blank=True)
     total_rejected = models.IntegerField(null=True, blank=True)
-    process_types_total=models.CharField(max_length=264,null=True,blank=True)
+    process_types_total=models.CharField(max_length=1000000,null=True,blank=True)
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     is_deleted=models.BooleanField(default=False)
@@ -146,15 +148,15 @@ class report_user_process(models.Model):
     class Meta:
         db_table = "report_user_process"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-
-
-        return super(report_user_process, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #
+    #
+    #     return super(report_user_process, self).save(*args, **kwargs)
 
 
 class report_society_process(models.Model):
@@ -165,7 +167,7 @@ class report_society_process(models.Model):
     total_approved = models.IntegerField(null=True, blank=True)
     total_cancelled = models.IntegerField(null=True, blank=True)
     total_rejected = models.IntegerField(null=True, blank=True)
-    process_types_total=models.CharField(max_length=264,null=True,blank=True)
+    process_types_total=models.CharField(max_length=10000,null=True,blank=True)
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     is_deleted=models.BooleanField(default=False)
@@ -202,12 +204,13 @@ class members(models.Model):
     society_id=models.ForeignKey(society,on_delete=models.CASCADE,related_name='membersSociety',null=True,blank=True)
     user_id = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='membersUser', null=True,
                                    blank=True)
+    mysql_id=models.IntegerField(null=True,blank=True)
     member_plot_id=models.IntegerField(null=True,blank=True)
     membership_no=models.CharField(max_length=1000,null=True,blank=True)
     society_no = models.CharField(max_length=1000, null=True, blank=True)
     full_name = models.CharField(max_length=1000, null=True, blank=True)
     block= models.CharField(max_length=1000, null=True, blank=True)
-    size=models.IntegerField(null=True,blank=True)
+    size=models.CharField(max_length=1000,null=True,blank=True)
     type=models.CharField(max_length=264,null=True,blank=True)
     corner=models.IntegerField(null=True,blank=True)
     res_com=models.CharField(max_length=264,null=True,blank=True)
@@ -243,15 +246,17 @@ class members(models.Model):
 
     class Meta:
         db_table = "members"
+    def __str__(self):
+        return str(self.mysql_id)
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-
-        return super(members, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #
+    #     return super(members, self).save(*args, **kwargs)
 
 
 class letters(models.Model):
@@ -260,6 +265,7 @@ class letters(models.Model):
                                 blank=True)
     member_id = models.ForeignKey(members, on_delete=models.CASCADE, related_name='MembersLetters', null=True,
                                   blank=True)
+    mysql_id=models.IntegerField(null=True,blank=True)
     type=models.CharField(max_length=264,null=True,blank=True)
     vars=models.CharField(max_length=264,null=True,blank=True)
     heading=models.CharField(max_length=264,null=True,blank=True)
@@ -267,11 +273,12 @@ class letters(models.Model):
     issue_date=models.DateTimeField(null=True,blank=True)
     sms_code=models.CharField(max_length=10000,null=True,blank=True)
     sms_code_hash = models.CharField(max_length=10000, null=True, blank=True)
+    president_barcode = models.CharField(max_length=10000, null=True, blank=True)
     president_barcode_hash=models.CharField(max_length=10000, null=True, blank=True)
     gs_barcode=models.CharField(max_length=10000, null=True, blank=True)
     gs_barcode_hash = models.CharField(max_length=10000, null=True, blank=True)
-    qr_barcode = models.CharField(max_length=10000, null=True, blank=True)
-    qr_barcode_hash = models.CharField(max_length=10000, null=True, blank=True)
+    qr_code = models.CharField(max_length=10000, null=True, blank=True)
+    qr_code_hash = models.CharField(max_length=10000, null=True, blank=True)
     rfid_code= models.CharField(max_length=10000, null=True, blank=True)
     rfid_code_hash = models.CharField(max_length=10000, null=True, blank=True)
     is_printed=models.BooleanField(null=True,blank=True)
@@ -285,14 +292,14 @@ class letters(models.Model):
 
     class Meta:
         db_table = "letters"
-
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-        return super(letters, self).save(*args, **kwargs)
+    #
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #     return super(letters, self).save(*args, **kwargs)
 
 
 
@@ -301,6 +308,7 @@ class letters(models.Model):
 class member_meta(models.Model):
     member_id = models.ForeignKey(members, on_delete=models.CASCADE, related_name='memberMeta', null=True,
                                   blank=True)
+    meta_value=models.CharField(max_length=1000,null=True,blank=True)
     meta_key=models.CharField(max_length=1000,null=True,blank=True)
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
@@ -309,13 +317,13 @@ class member_meta(models.Model):
     class Meta:
         db_table = "member_meta"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-        return super(member_meta, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #     return super(member_meta, self).save(*args, **kwargs)
 
 class member_employee_info(models.Model):
     society_id=models.ForeignKey(society,on_delete=models.CASCADE,related_name='memberemployeeSociety',null=True,
@@ -356,23 +364,26 @@ class member_activity(models.Model):
     class Meta:
         db_table = "member_activity"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-        return super(member_activity, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #     return super(member_activity, self).save(*args, **kwargs)
 
 
 class contacts(models.Model):
     society_id = models.ForeignKey(society, on_delete=models.CASCADE, related_name='contacts', null=True,
                                    blank=True)
-    item_id=models.IntegerField(null=True,blank=True)
+    mysql_id=models.IntegerField(null=True,blank=True)
+    member_id=models.ForeignKey(members,on_delete=models.CASCADE,null=True,blank=True)
     parent_id=models.IntegerField(null=True,blank=True)
     address_type=models.CharField(max_length=264,null=True,blank=True)
-    model=models.CharField(max_length=264,null=True,blank=True)
+    contact_type = models.CharField(max_length=264, null=True, blank=True)
     contact=models.CharField(max_length=264,null=True,blank=True)
+    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
 
     class Meta:
@@ -429,7 +440,6 @@ class plot_size_categories(models.Model):
 
 class plot_size(models.Model):
     society_id=models.ForeignKey(society,on_delete=models.CASCADE,related_name='societyPlotSize',null=True,blank=True)
-    size=models.CharField(max_length=264,null=True,blank=True)
     size_in_units=models.FloatField(null=True,blank=True)
     plot_type=models.CharField(max_length=264,null=True,blank=True)
     rate_per_unit = models.FloatField(null=True, blank=True)
@@ -443,6 +453,8 @@ class plot_size(models.Model):
     late_installment_surcharges = models.FloatField(null=True, blank=True)
     posession_charge=models.FloatField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
+    size = models.CharField(max_length=264, null=True, blank=True)
+    mysql_id = models.IntegerField(null=True, blank=True)
 
     class Meta:
         db_table = "plot_size"
@@ -456,8 +468,9 @@ class plots(models.Model):
     plot_size_id=models.ForeignKey(plot_size,on_delete=models.CASCADE,related_name='societyPlotSize',null=True,blank=True)
     plot_size_category_id = models.ForeignKey(plot_size_categories, on_delete=models.CASCADE, related_name='societyPlotSize', null=True,
                                      blank=True)
-    plot_number = models.IntegerField(null=True, blank=True)
-    street_number = models.IntegerField(null=True, blank=True)
+    mysql_id=models.IntegerField(null=True,blank=True)
+    plot_number = models.CharField(null=True, blank=True,max_length=264)
+    street_number = models.CharField(null=True, blank=True,max_length=264)
     plot_address = models.CharField(max_length=1000, null=True, blank=True)
     block_no = models.CharField(max_length=1000, null=True, blank=True)
     form_no= models.CharField(max_length=1000, null=True, blank=True)
@@ -467,7 +480,7 @@ class plots(models.Model):
     interest = models.FloatField(null=True, blank=True)
     enhancement_cost = models.FloatField(null=True, blank=True)
     total_cost = models.FloatField(null=True, blank=True)
-    alloted_access_area =models.CharField(max_length=1000, null=True, blank=True)
+    alloted_excess_area =models.CharField(max_length=1000, null=True, blank=True)
     excess_area_dimension= models.FloatField(null=True, blank=True)
     excess_area_memo_no = models.FloatField(null=True, blank=True)
     plot_quota=models.CharField(max_length=1000, null=True, blank=True)
@@ -482,11 +495,10 @@ class plots(models.Model):
     class Meta:
         db_table = "plots"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
+    # def save(self,*args,**kwargs):
+    #     if self.excess_area_dimension=='':
+    #         self.excess_area_dimension=None
+    #     return super(plots, self).save(*args, **kwargs)
 
 
 class member_plots(models.Model):
@@ -494,6 +506,7 @@ class member_plots(models.Model):
                                 blank=True)
     plot_id=models.ForeignKey(plots,on_delete=models.CASCADE,related_name='Plots',null=True,
                                 blank=True)
+    mysql_id=models.IntegerField(null=True,blank=True)
     plot_no=models.IntegerField(null=True,blank=True)
     remaining_amount=models.FloatField(null=True,blank=True)
     next_due_date=models.DateField(null=True,blank=True)
@@ -507,13 +520,13 @@ class member_plots(models.Model):
     class Meta:
         db_table = "member_plots"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-        return super(member_plots, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #     return super(member_plots, self).save(*args, **kwargs)
 
 
 
@@ -522,6 +535,7 @@ class payments(models.Model):
     society_id=models.ForeignKey(society,on_delete=models.CASCADE,null=True,blank=True)
     member_id=models.ForeignKey(members,on_delete=models.CASCADE,related_name='membersPayments',null=True,
                                 blank=True)
+    mysql_id=models.IntegerField(null=True,blank=True)
     order_no=models.CharField(max_length=1000, null=True, blank=True)
     plot_no=models.CharField(max_length=256, null=True, blank=True)
     street_number=models.CharField(max_length=1000, null=True, blank=True)
@@ -535,7 +549,7 @@ class payments(models.Model):
     fee = models.FloatField(null=True, blank=True)
     total_amount = models.FloatField(null=True, blank=True)
     otc_payment_token=models.CharField(max_length=1000,null=True,blank=True)
-    otc_payment_token_expiry=models.FloatField(null=True,blank=True)
+    otc_payment_token_expiry=models.CharField(max_length=264,null=True,blank=True)
     payment_type=models.CharField(max_length=264,null=True,blank=True)
     mode_of_payment=models.CharField(max_length=264,null=True,blank=True)
     status=models.CharField(max_length=1000,null=True,blank=True)
@@ -548,11 +562,11 @@ class payments(models.Model):
     class Meta:
         db_table = "payments"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
 
 gender=(('male','male'),('female','female'))
 
