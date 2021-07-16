@@ -4,6 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 import mysql.connector
 from mysql.connector import Error
+from django.http import JsonResponse
+from UserManagement.utils import face_recognize, token_expire_handler
 from django.views.generic import (
     DetailView,
     CreateView,
@@ -47,46 +49,6 @@ import cv2
 import os
 from PHA.settings import BASE_DIR
 
-
-def facedect(loc):
-    cam = cv2.VideoCapture(0)
-    s, img = cam.read()
-    k=True
-    if k:
-
-
-        MEDIA_ROOT =os.path.join(BASE_DIR)
-
-        loc = (str(MEDIA_ROOT) + loc)
-
-        loc2 = (str(MEDIA_ROOT) + '/media/lesnar2.jpeg')
-        face_1_image = face_recognition.load_image_file(loc)
-        face_2_image=face_recognition.load_image_file(loc2)
-        print(loc)
-        print(loc2)
-        face_1_face_encoding = face_recognition.face_encodings(face_1_image)[0]
-        face_2_face_encoding = face_recognition.face_encodings(face_2_image)[0]
-        print(face_2_face_encoding)
-        print(face_1_face_encoding)
-
-        #
-
-        # small_frame = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
-        #
-        # rgb_small_frame = small_frame[:, :, ::-1]
-        #
-        # face_locations = face_recognition.face_locations(rgb_small_frame)
-        # face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
-
-        check = face_recognition.compare_faces([face_1_face_encoding], face_2_face_encoding)
-
-        print(check)
-        if check[0]:
-            return True
-
-        else:
-            return False
-
         # Create your views here.
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -104,35 +66,54 @@ def login_user(request):
         except BaseException as e:
             raise ValidationError({"Error": f'{str(e)}'})
 
-        token = Token.objects.get_or_create(user=Account)[0].key
+        token, _ = Token.objects.get_or_create(user=Account)
+        user_token = token.key
+        is_expired = token_expire_handler(token)
         if not check_password(password, Account.password):
             raise ValidationError({"message": "Incorrect Login credentials"})
 
 
         if Account:
             if Account.is_active:
-                # print(f"this here {Account.profile_pic.url}")
+                print(Account.profile_pic.url)
+
+                if face_recognize(Account.profile_pic.url):
+                    print('am i here?')
 
 
-                # if facedect(Account.profile_pic.url):
-                #     print('am i here?')
+                    login(request, Account)
+                    data["message"] = "user logged in"
+                    data["username"] = Account.username
+                    data['id']=Account.id
 
+                    Res = {"data": data, "token": user_token, "is_expired": is_expired}
 
-                login(request, Account)
-                data["message"] = "user logged in"
-                data["username"] = Account.username
-                data['id']=Account.id
-
-                Res = {"data": data, "token": token,}
-
-                return Response(Res)
-                # else:
-                #     return Response('Invalid user')
+                    return Response(Res)
+                else:
+                    return Response('Invalid user')
             else:
                 raise ValidationError({"Error": f'Account not active'})
 
         else:
             raise ValidationError({"Error": f'Account doesnt exist'})
+
+
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def logout_user(request):
+    request.user.auth_token.delete()
+    logout(request)
+    return JsonResponse({"Message": "User Successfully logout !!!"})
+
+
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def is_token_expire(request):
+    token = Token.objects.get(user=request.user)
+    is_expire = token_expire_handler(token)
+    return Response({"is_expire": is_expire})
 
 
 
