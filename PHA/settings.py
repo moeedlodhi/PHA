@@ -111,7 +111,7 @@ pymysql.install_as_MySQLdb()
 #         'PORT': '3306',
 #     }
 # }
-
+TOKEN_EXPIRED_AFTER_SECONDS=timedelta(30)
 DATABASES = {
 
     'default': {

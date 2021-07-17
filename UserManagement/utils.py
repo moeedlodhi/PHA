@@ -8,7 +8,7 @@ import face_recognition
 from PHA.settings import BASE_DIR, TOKEN_EXPIRED_AFTER_SECONDS
 
 
-def face_recognize(loc):
+def face_recognize(loc,second):
     # cam = cv2.VideoCapture(0)
     # s, img = cam.read()
     # print(s, img)
@@ -24,7 +24,7 @@ def face_recognize(loc):
         # small_frame = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
         #
         # rgb_small_frame = small_frame[:, :, ::-1]
-        loc2 = (str(media_root) + "/media/ab.jpg")
+        loc2 = second
         face_2_image = face_recognition.load_image_file(loc2)
         face_2_face_encoding = face_recognition.face_encodings(face_2_image)[0]
 

@@ -56,10 +56,11 @@ from PHA.settings import BASE_DIR
 def login_user(request):
 
         data = {}
-        reqBody = json.loads(request.body)
-        username = reqBody['username']
+        # reqBody = json.loads(request.body)
+        username = request.POST['username']
 
-        password = reqBody['password']
+        password = request.POST['password']
+        image=request.FILES['image']
         try:
 
             Account = Users.objects.get(username=username)
@@ -77,7 +78,7 @@ def login_user(request):
             if Account.is_active:
                 print(Account.profile_pic.url)
 
-                if face_recognize(Account.profile_pic.url):
+                if face_recognize(Account.profile_pic.url,image):
                     print('am i here?')
 
 
@@ -115,7 +116,7 @@ def is_token_expire(request):
     is_expire = token_expire_handler(token)
     return Response({"is_expire": is_expire})
 
-
+"""Below begins all Postgres Pulls"""
 
 @api_view(["GET"])
 @authentication_classes([TokenAuthentication])
