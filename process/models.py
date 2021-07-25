@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from UserManagement.models import Users,user_roles
-from societies.models import society
+from societies.models import society,members,plots
 # Create your models here.
 
 
@@ -50,20 +50,21 @@ class process(models.Model):
     society_id=models.ForeignKey(society,related_name='societyProcess',on_delete=models.CASCADE,null=True,blank=True)
     user_id=models.ForeignKey(Users,related_name='usersProcess',on_delete=models.CASCADE,null=True,blank=True)
     type_id=models.ForeignKey(process_types,related_name='processtype',on_delete=models.CASCADE,null=True,blank=True)
-    assigned_to=models.CharField(null=True,blank=True,max_length=264)
+    mysql_id=models.IntegerField(null=True,blank=True)
+    assigned_to=models.ForeignKey(Users,related_name='usersProcessassigne',on_delete=models.CASCADE,null=True,blank=True)
     payment_id=models.CharField(null=True,blank=True,max_length=264)
-    member_id=models.CharField(null=True,blank=True,max_length=264)
-    plot_id = models.CharField(null=True, blank=True, max_length=264)
+    member_id=models.CharField(max_length=264,null=True,blank=True)
+    plot_id = models.ForeignKey(plots,on_delete=models.CASCADE,null=True,blank=True)
     plot_no = models.CharField(null=True, blank=True,max_length=264)
-    plot_block_no = models.IntegerField(null=True, blank=True)
+    plot_block_no = models.CharField(max_length=1000,null=True, blank=True)
     plot_address=models.CharField(null=True, blank=True, max_length=264)
     full_name=models.CharField(null=True, blank=True, max_length=264)
     cnic=models.CharField(null=True, blank=True, max_length=264)
     type=models.CharField(null=True, blank=True, max_length=264)
-    process_data=models.CharField(null=True, blank=True, max_length=264)
-    process_data_back = models.CharField(null=True, blank=True, max_length=264)
+    process_data=models.CharField(null=True, blank=True, max_length=100000)
+    process_data_back = models.CharField(null=True, blank=True, max_length=26400)
     status = models.CharField(null=True, blank=True, max_length=264)
-    street_no=models.IntegerField(null=True, blank=True)
+    street_no=models.CharField(max_length=1000,null=True, blank=True)
     process_no=models.IntegerField(null=True,blank=True)
     is_deleted=models.BooleanField(default=False)
 
@@ -73,14 +74,14 @@ class process(models.Model):
     class Meta:
         db_table = "process"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-
-        return super(process, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #
+    #     return super(process, self).save(*args, **kwargs)
 
 
 class process_comments(models.Model):
@@ -89,16 +90,17 @@ class process_comments(models.Model):
     user_role=models.CharField(max_length=264,null=True,blank=True)
     status=models.CharField(max_length=264,null=True,blank=True)
     log=models.CharField(max_length=264,null=True,blank=True)
-    created_at = models.DateTimeField(editable=False, null=True, blank=True)
+    comments = models.CharField(max_length=264, null=True, blank=True)
+    created_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "process_comments"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-        return super(process_comments, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #     return super(process_comments, self).save(*args, **kwargs)

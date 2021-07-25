@@ -23,11 +23,11 @@ try:
 except Error as e:
         print("Error while connecting to MySQL", e)
 
-sqlquery = 'SELECT * FROM installments'
+sqlquery = 'SELECT * FROM process_comments'
 cursor = connection.cursor()
 cursor.execute(sqlquery)
 records = cursor.fetchall()
 for items in records:
-    print(items[14])
+    print(type(items[7]))
 
 

@@ -49,3 +49,7 @@ def token_expire_handler(token):
     if is_expired:
         token.delete()
     return is_expired
+
+
+lsit='364,365||131'
+print(lsit.split('||'))

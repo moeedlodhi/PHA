@@ -26,7 +26,7 @@ from rest_framework.decorators import authentication_classes
 from django.views.decorators.csrf import csrf_exempt
 from UserManagement.models import Users,user_roles,settings
 from societies.models import user_societies,society,sms_log,report_user_process,zones,plot_size,plots,members,member_plots,member_meta,member_activity,payments,letters,contacts
-from process.models import process_types,process,process_types_meta
+from process.models import process_types,process,process_types_meta,process_comments
 from fees.models import installments
 from django.core.mail import send_mail,EmailMessage
 from django.core.mail import EmailMessage
@@ -348,6 +348,102 @@ def report_user_proccess_pull(request):
 
     return Response('I am happy')
 
+
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([AllowAny])
+def process1(request):
+    try:
+        connection = mysql.connector.connect(host='127.0.0.1',
+                                             database='ufc',
+                                             user='golden',
+                                             password='password')
+
+        if connection.is_connected():
+            db_Info = connection.get_server_info()
+            print("Connected to MySQL Server version ", db_Info)
+            cursor = connection.cursor()
+            cursor.execute("select database();")
+            record = cursor.fetchone()
+            print("You're connected to database: ", record)
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+
+    sqlquery = 'SELECT * FROM process'
+    cursor = connection.cursor()
+    cursor.execute(sqlquery)
+    records = cursor.fetchall()
+    error=[]
+    for items in records:
+        used=Users.objects.get(id=items[2])
+        soc = society.objects.get(id=items[1])
+        try:
+            typed=process_types.objects.get(id=items[3])
+        except:
+            typed=None
+        try:
+            assigne=Users.objects.get(id=items[4])
+        except:
+            assigne=None
+        try:
+            plo=plots.objects.get(mysql_id=items[7])
+        except:
+            plo=None
+        try:
+            pay=payments.objects.get(mysql_id=items[5])
+        except:
+            pay=None
+
+
+
+        try:
+                        # mem = members.objects.get(mysql_id=items[6])
+                        pro = process.objects.get_or_create(mysql_id=items[0], society_id=soc, user_id=used,
+                                                        type_id=typed, assigned_to=assigne, payment_id=pay,
+                                                        member_id=items[6], plot_id=plo, process_no=items[8],
+                                                        plot_no=items[9],
+                                                        street_no=items[10], plot_block_no=items[11],
+                                                        plot_address=items[12],
+                                                        full_name=items[13], cnic=items[14], type=items[15],
+                                                        process_data=items[16],
+                                                        process_data_back=items[17], status=items[18],
+                                                        created_at=items[19],
+                                                        updated_at=items[20])
+        except ValueError:
+                        print(items[0])
+                        raise ValidationError('Value Error')
+
+
+
+
+
+
+    print(error)
+    return Response('Hello world again')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @api_view(["GET"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([AllowAny])
@@ -417,40 +513,47 @@ def process_types_meta1(request):
 
 
 
-# @api_view(["GET"])
-# @authentication_classes([TokenAuthentication])
-# @permission_classes([AllowAny])
-# def process_comments1(request):
-#     try:
-#         connection = mysql.connector.connect(host='127.0.0.1',
-#                                              database='ufc',
-#                                              user='golden',
-#                                              password='password')
-#
-#         if connection.is_connected():
-#             db_Info = connection.get_server_info()
-#             print("Connected to MySQL Server version ", db_Info)
-#             cursor = connection.cursor()
-#             cursor.execute("select database();")
-#             record = cursor.fetchone()
-#             print("You're connected to database: ", record)
-#
-#     except Error as e:
-#         print("Error while connecting to MySQL", e)
-#
-#     sqlquery = 'SELECT * FROM process'
-#     cursor = connection.cursor()
-#     cursor.execute(sqlquery)
-#     records = cursor.fetchall()
-#     for items in records:
-#         pro1=process_types.objects.get(id=items[3])
-#         met=process_types_meta.objects.get_or_create(id=items[0],type_id=pro1,
-#                                                      meta_key=items[2],
-#                                                      meta_value=items[3],
-#                                                      created_at=items[4],
-#                                                      updated_at=items[5])
-#     return Response('Hello world again')
-#
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([AllowAny])
+def process_comments1(request):
+    try:
+        connection = mysql.connector.connect(host='127.0.0.1',
+                                             database='ufc',
+                                             user='golden',
+                                             password='password')
+
+        if connection.is_connected():
+            db_Info = connection.get_server_info()
+            print("Connected to MySQL Server version ", db_Info)
+            cursor = connection.cursor()
+            cursor.execute("select database();")
+            record = cursor.fetchone()
+            print("You're connected to database: ", record)
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+
+    sqlquery = 'SELECT * FROM process_comments'
+    cursor = connection.cursor()
+    cursor.execute(sqlquery)
+    records = cursor.fetchall()
+    error=[]
+    for items in records:
+        try:
+            pro1=process.objects.get(mysql_id=items[1])
+            used=Users.objects.get(id=items[2])
+            pro=process_comments.objects.get_or_create(process_id=pro1,user_id=used,user_role=items[3],
+                                                   status=items[4],log=items[5],comments=items[6],
+                                                   created_at=items[7],updated_at=items[8])
+        except:
+            error.append(items[1])
+
+
+    print(error)
+    "Error=[55, 55, 55, 55, 55, 55, 55, 69, 70, 72, 87, 108, 108, 100, 101, 127, 135, 218, 134, 235, 266, 292, 299, 291, 319, 265, 363, 368, 362, 364, 366, 365, 367, 191, 440, 459, 564, 405, 693, 694, 695, 720, 721, 927, 928, 965, 966, 928, 928, 928, 979, 980, 980, 981, 982, 983, 984, 985, 986, 987, 989, 988, 991, 990, 992, 993, 994, 995, 996, 997, 998, 999, 1000, 1003, 1002, 1000, 1001, 1001, 1005, 1026, 1026, 1052, 1077, 1078, 1079, 1080, 1099, 1080, 1100, 1080, 1099, 1100, 1080, 1099, 1100, 1120, 1119, 1125, 1132, 1006, 1134, 1135, 1137, 1181, 1194, 1202, 1202, 1136, 1203, 1201, 1216, 1235, 1260, 1263, 1271, 1270, 1270, 1271, 1278, 1279, 1280, 1281, 1282, 1282, 1289, 1150, 1294, 2108, 2738, 2738, 2738, 2738, 2737, 2737, 2737, 2737, 2739, 2739, 2739, 2739, 2746, 2756, 2763, 2768, 2904, 2909, 2904, 2904, 2904, 2904, 2909, 2909, 2909, 2909, 3224, 3224, 3225, 3225, 3225, 3224, 3224, 3225, 3225, 3778, 3779, 3777, 3780, 3775, 3764, 3782, 3781, 3783, 3784, 3785, 3788, 3786, 3789]"
+    return Response('Hello world again')
+
 
 
 
