@@ -88,13 +88,14 @@ class documents(models.Model):
                                   blank=True)
     process_id=models.ForeignKey(process, on_delete=models.CASCADE, related_name='processDocuments', null=True,
                                   blank=True)
+    mysql_id=models.IntegerField(null=True,blank=True)
     model=models.CharField(max_length=264,null=True,blank=True)
     temp_id=models.CharField(max_length=1000,null=True,blank=True)
     savedTo=models.ImageField(null=True,blank=True)
     document_type=models.CharField(max_length=264,null=True,blank=True)
     file_name=models.CharField(max_length=10000,null=True,blank=True)
     file_size=models.IntegerField(null=True,blank=True)
-    file_stype=models.CharField(null=True,blank=True,max_length=264)
+    file_type=models.CharField(null=True,blank=True,max_length=264)
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
@@ -102,13 +103,13 @@ class documents(models.Model):
     class Meta:
         db_table = "documents"
 
-    def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
-        if not self.id:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-
-        return super(documents, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     ''' On save, update timestamps '''
+    #     if not self.id:
+    #         self.created_at = timezone.now()
+    #     self.updated_at = timezone.now()
+    #
+    #     return super(documents, self).save(*args, **kwargs)
 
 
 

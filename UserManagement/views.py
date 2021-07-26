@@ -27,7 +27,7 @@ from django.views.decorators.csrf import csrf_exempt
 from UserManagement.models import Users,user_roles,settings
 from societies.models import user_societies,society,sms_log,report_user_process,zones,plot_size,plots,members,member_plots,member_meta,member_activity,payments,letters,contacts
 from process.models import process_types,process,process_types_meta,process_comments
-from fees.models import installments
+from fees.models import installments,documents
 from django.core.mail import send_mail,EmailMessage
 from django.core.mail import EmailMessage
 from django.contrib.auth.hashers import check_password
@@ -69,7 +69,7 @@ def login_user(request):
 
         token, _ = Token.objects.get_or_create(user=Account)
         user_token = token.key
-        is_expired = token_expire_handler(token)
+        # is_expired = token_expire_handler(token)
         if not check_password(password, Account.password):
             raise ValidationError({"message": "Incorrect Login credentials"})
 
@@ -87,7 +87,7 @@ def login_user(request):
                     data["username"] = Account.username
                     data['id']=Account.id
 
-                    Res = {"data": data, "token": user_token, "is_expired": is_expired}
+                    Res = {"data": data, "token": user_token, "is_expired": "yes"}
 
                     return Response(Res)
                 else:
@@ -426,7 +426,54 @@ def process1(request):
 
 
 
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([AllowAny])
+def documents1(request):
+    try:
+        connection = mysql.connector.connect(host='127.0.0.1',
+                                             database='ufc',
+                                             user='golden',
+                                             password='password')
 
+        if connection.is_connected():
+            db_Info = connection.get_server_info()
+            print("Connected to MySQL Server version ", db_Info)
+            cursor = connection.cursor()
+            cursor.execute("select database();")
+            record = cursor.fetchone()
+            print("You're connected to database: ", record)
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+
+    sqlquery = 'SELECT * FROM documents'
+    cursor = connection.cursor()
+    cursor.execute(sqlquery)
+    records = cursor.fetchall()
+    error=[]
+    for items in records:
+        soc=society.objects.get(id=items[1])
+        try:
+            mem=members.objects.get(mysql_id=items[2])
+        except:
+            mem=None
+        try:
+            pro=process.objects.get(mysql_id=items[3])
+        except:
+            pro=None
+        doc=documents.objects.get_or_create(id=items[0],mysql_id=items[0],society_id=soc,member_id=mem,process_id=pro,
+                                            model=items[4],temp_id=items[5],savedTo=f"{items[6]}{items[5]}",document_type=items[7],
+                                            file_name=items[8],file_size=items[9],file_type=items[10],created_at=items[11],
+                                            updated_at=items[12])
+
+
+
+
+
+
+    print(error)
+    return Response('Hello world again')
 
 
 

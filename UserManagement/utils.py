@@ -15,7 +15,9 @@ def face_recognize(loc,second):
     k = True
     if k:
         media_root = os.path.join(BASE_DIR)
+        print(f"This is media root {media_root}")
         loc = (str(media_root) + loc)
+        print(loc)
         face_1_image = face_recognition.load_image_file(loc)
         # print(loc)
         # print(face_1_image)

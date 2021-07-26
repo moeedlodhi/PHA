@@ -12,6 +12,7 @@ urlpatterns = [
     path('user_societies/',views.user_societies1),
     path('settings/',views.settings1),
     path('report_user_process/',views.report_user_proccess_pull),
+    path('documents/',views.documents1),
     path('process/',views.process1),
     path('process_types/',views.process_types1),
     path('process_meta/',views.process_types_meta1),

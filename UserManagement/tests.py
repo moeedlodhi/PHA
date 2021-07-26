@@ -23,11 +23,20 @@ try:
 except Error as e:
         print("Error while connecting to MySQL", e)
 
-sqlquery = 'SELECT * FROM process_comments'
+sqlquery = 'SELECT * FROM process'
 cursor = connection.cursor()
 cursor.execute(sqlquery)
 records = cursor.fetchall()
-for items in records:
-    print(type(items[7]))
+error=[]
+for index,items in enumerate(records):
+    try:
+        if '||' in items[6]:
+            # print(index)
+            # print(items[6])
+            # print(items[6].split('||'))
+            if len(items[6].split('||')[0].split(','))>1:
+                print(items[6])
+                print(items[6].split('||')[0].split(','))
 
-
+    except:
+        pass
