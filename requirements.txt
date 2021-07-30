@@ -8,11 +8,12 @@ dlib==19.22.0
 drf-expiring-token==1.1.2
 face-recognition==1.3.0
 face-recognition-models==0.3.0
+mysql-connector==2.2.9
 numpy==1.21.0
 opencv-python==4.5.3.56
 pandas==1.3.0
 Pillow==8.3.0
-psycopg2==2.9.1
+psycopg2-binary==2.9.1
 PyMySQL==1.0.2
 python-dateutil==2.8.1
 pytz==2021.1

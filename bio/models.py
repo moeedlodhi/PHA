@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from UserManagement.models import Users,user_roles
+from UserManagement.models import Users
 from societies.models import society,members,plots
 
 from process.models import process

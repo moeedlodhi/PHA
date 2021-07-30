@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from UserManagement.models import Users,user_roles
+from UserManagement.models import Users, UserRoles
 
 
 
@@ -54,7 +54,7 @@ class user_societies(models.Model):
     mysqlid=models.IntegerField(null=True,blank=True)
     society_id=models.ForeignKey(society,on_delete=models.CASCADE,null=True,blank=True,related_name='UserSocieties')
     user_id=models.ForeignKey(Users,related_name='UserSocieties',on_delete=models.CASCADE,null=True,blank=True)
-    role_id=models.ForeignKey(user_roles,related_name='RoleSocieties',on_delete=models.CASCADE,null=True,blank=True)
+    role_id=models.ForeignKey(UserRoles,related_name='RoleSocieties',on_delete=models.CASCADE,null=True,blank=True)
     status=models.IntegerField()
     created_at = models.DateTimeField(editable=False, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
