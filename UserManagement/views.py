@@ -108,12 +108,9 @@ def create_user(request):
     city = request.POST['city']
     mobile_number = request.POST['mobile_number']
     landline_number = request.POST['landline_number']
-    user_signs = request.FILES['user_signs']
+    user_sign = request.FILES['user_sign']
     comments = request.POST['comments']
     password = request.POST['password']
-    user = Users.objects.get(username=username)
-    if user:
-        return Response({'Message': 'User already exists !!!'})
     try:
         new_user = Users.objects.get_or_create(username=username, email=email, profile_pic=profile_pic,
                                                is_active=is_active, is_admin=is_admin, is_superuser=is_superuser,
@@ -121,8 +118,7 @@ def create_user(request):
                                                middle_name=middle_name, last_name=last_name, father_name=father_name,
                                                husband_name=husband_name, gender=gender, cnic=cnic, Address=address,
                                                city=city, mobile_number=mobile_number, landline_number=landline_number,
-                                               comments=comments)
-
+                                               user_sign=user_sign, comments=comments)
     except Users.DoesNotExist:
         return Response({"message": "database or payload error !!!"})
 
@@ -186,6 +182,7 @@ def update_user(request):
     user.save()
     data['message'] = "User updated successfully"
     data['username'] = username
+    data['email'] = user.email
     return Response(data)
 
 
@@ -196,12 +193,13 @@ def delete_user(request):
     data = {}
     request_body = json.loads(request.body)
     user_id = request_body['id']
-    user = Users.objects.get(id=user_id)
-    user.is_deleted = True
-    user.save()
-    data["id"] = user.id
-    data["username"] = user.username
-    data["is_deleted"] = user.is_deleted
+    try:
+        user = Users.objects.get(id=user_id)
+    except Users.DoesNotExist:
+        return Response({"Message": "User doesn't exists !!!"})
+    # user.is_deleted = True
+    user.delete()
+    data['message'] = "User deleted successfully"
     return Response(data)
 
 # UserRoles APIs
