@@ -197,8 +197,8 @@ def delete_user(request):
         user = Users.objects.get(id=user_id)
     except Users.DoesNotExist:
         return Response({"Message": "User doesn't exists !!!"})
-    # user.is_deleted = True
-    user.delete()
+    user.is_deleted = True
+    user.save()
     data['message'] = "User deleted successfully"
     return Response(data)
 
