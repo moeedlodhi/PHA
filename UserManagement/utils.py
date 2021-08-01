@@ -8,7 +8,7 @@ import face_recognition
 from PHA.settings import BASE_DIR, TOKEN_EXPIRED_AFTER_SECONDS
 
 
-def face_recognize(loc,second):
+def face_recognize(loc, second):
     # cam = cv2.VideoCapture(0)
     # s, img = cam.read()
     # print(s, img)
@@ -51,7 +51,3 @@ def token_expire_handler(token):
     if is_expired:
         token.delete()
     return is_expired
-
-
-lsit='364,365||131'
-print(lsit.split('||'))
