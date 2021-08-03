@@ -9,19 +9,13 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-import time
 import os
-from datetime import datetime, timedelta
-
 from pathlib import Path
 
-
-
+import pymysql
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -48,9 +42,9 @@ INSTALLED_APPS = [
     "rest_framework.authtoken"
 ]
 
-LOCAL_APPS=['UserManagement','societies','process','fees','bio']
+LOCAL_APPS = ['UserManagement', 'societies', 'process', 'fees', 'bio']
 
-INSTALLED_APPS=INSTALLED_APPS+LOCAL_APPS
+INSTALLED_APPS = INSTALLED_APPS+LOCAL_APPS
 
 
 MIDDLEWARE = [
@@ -82,14 +76,11 @@ TEMPLATES = [
 ]
 
 # WSGI_APPLICATION = 'PHA.wsgi.application'
-ASGI_APPLICATION='PHA.asgi.application'
+ASGI_APPLICATION = 'PHA.asgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-
-import pymysql
 
 pymysql.install_as_MySQLdb()
 
@@ -132,10 +123,7 @@ DATABASES = {
 
 }
 
-
-
-
-AUTH_USER_MODEL='UserManagement.Users'
+AUTH_USER_MODEL = 'UserManagement.Users'
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -181,9 +169,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication'
     ],
-'DEFAULT_PERMISSION_CLASSES': [
-    'rest_framework.permissions.IsAuthenticated',
-]
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
 }
 
 
@@ -193,9 +181,9 @@ REST_FRAMEWORK = {
 STATIC_URL = '/static/'
 
 
-MEDIA_URL='/media/'
+MEDIA_URL = '/media/'
 
-MEDIA_ROOT =os.path.join(BASE_DIR,'media/')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
