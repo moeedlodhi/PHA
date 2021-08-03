@@ -6,7 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.decorators import authentication_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.contrib.auth.hashers import check_password
 from django.core import serializers
 from rest_framework.exceptions import ValidationError
@@ -19,6 +19,7 @@ from fees.models import installments, documents
 from process.models import process_types, process, process_types_meta, process_comments
 from societies.models import user_societies, society, report_user_process, zones, plot_size,\
     plots, members, member_plots, member_meta, member_activity, payments, letters, contacts
+from UserManagement.decorators import user_role
 from UserManagement.models import Users, UserRoles, settings
 from UserManagement.utils import face_recognize, token_expire_handler
 
@@ -141,14 +142,31 @@ def show_users(request):
     return Response(json.loads(users), content_type='application/json')
 
 
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@user_role(["Director"])
+def show_user(request, id_):
+    user_object = Users.objects.filter(id=id_)
+    user = serializers.serialize("json", user_object)
+    return Response(json.loads(user), content_type='application/json', status=200)
+
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@user_role(["to", "ad", "Director"])
+def decorator_test(request):
+    """
+    this is doc string
+    """
+    return Response({"Message": "you have access"})
+
+
 @api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
-def update_user(request):
-
-    username = request.POST['username']
+def update_user(request, id_):
     try:
-        user = Users.objects.get(username=username)
+        user = Users.objects.get(id=id_)
         if not user:
             return Response({"Message": "User doesn't exists !!!"})
     except Users.DoesNotExist:
@@ -177,11 +195,12 @@ def update_user(request):
     user.landline_number = request.POST['landline_number']
     user.comments = request.POST['comments']
     password = request.POST['password']
+
     data = {}
     user.set_password(password)
     user.save()
     data['message'] = "User updated successfully"
-    data['username'] = username
+    data['username'] = user.username
     data['email'] = user.email
     return Response(data)
 
@@ -189,18 +208,17 @@ def update_user(request):
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
-def delete_user(request):
+def delete_user(request, id_):
     data = {}
-    request_body = json.loads(request.body)
-    user_id = request_body['id']
     try:
-        user = Users.objects.get(id=user_id)
+        user = Users.objects.get(id=id_)
     except Users.DoesNotExist:
         return Response({"Message": "User doesn't exists !!!"})
     user.is_deleted = True
     user.save()
     data['message'] = "User deleted successfully"
     return Response(data)
+
 
 # UserRoles APIs
 
@@ -234,6 +252,15 @@ def show_users_roles(request):
     return Response(json.loads(users_roles), content_type='application/json')
 
 
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@user_role(["Director"])
+def show_user_role(request, id_):
+    user_role_object = UserRoles.objects.filter(id=id_)
+    users_role = serializers.serialize("json", user_role_object)
+    return Response(json.loads(users_role), content_type='application/json')
+
+
 @api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
@@ -258,10 +285,8 @@ def update_user_role(request):
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
-def delete_user_role(request):
-    request_body = json.loads(request.body)
-    user_role_id = request_body["id"]
-    user_role_object = UserRoles.objects.get(id=user_role_id)
+def delete_user_role(request, id_):
+    user_role_object = UserRoles.objects.get(id=id_)
     user_role_object.is_deleted = True
     user_role_object.save()
     return Response({"Message": "User Role deleted successfully !!!"}, content_type='application/json')
