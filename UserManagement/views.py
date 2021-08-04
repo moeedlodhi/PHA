@@ -22,6 +22,7 @@ from societies.models import user_societies, society, report_user_process, zones
 from UserManagement.decorators import user_role
 from UserManagement.models import Users, UserRoles, settings
 from UserManagement.utils import face_recognize, token_expire_handler
+from UserManagement.serializers import UsersSerializer
 
 
 # Create your views here.
@@ -44,23 +45,18 @@ def login_user(request):
         raise ValidationError({"message": "Incorrect Login credentials"})
 
     if account:
-        if account.is_active:
-            print(account.profile_pic.url)
-
+        if account.is_active and not account.is_deleted:
             if face_recognize(account.profile_pic.url, image):
-                print('am i here?')
-
                 login(request, account)
-                data["message"] = "user logged in"
+                data["message"] = "User logged in"
                 data["username"] = account.username
                 data['id'] = account.id
                 data['token'] = user_token
                 return Response(data)
             else:
-                return Response('Invalid user')
+                raise ValidationError({"Error": f'Face not recognize'})
         else:
             raise ValidationError({"Error": f'Account not active'})
-
     else:
         raise ValidationError({"Error": f'Account doesnt exist'})
 
@@ -113,24 +109,23 @@ def create_user(request):
     comments = request.POST['comments']
     password = request.POST['password']
     try:
-        new_user = Users.objects.get_or_create(username=username, email=email, profile_pic=profile_pic,
-                                               is_active=is_active, is_admin=is_admin, is_superuser=is_superuser,
-                                               is_staff=is_staff, role_id=role_object, role=role, first_name=first_name,
-                                               middle_name=middle_name, last_name=last_name, father_name=father_name,
-                                               husband_name=husband_name, gender=gender, cnic=cnic, Address=address,
-                                               city=city, mobile_number=mobile_number, landline_number=landline_number,
-                                               user_sign=user_sign, comments=comments)
-    except Users.DoesNotExist:
-        return Response({"message": "database or payload error !!!"})
+        new_user = Users.objects.create(username=username, email=email, profile_pic=profile_pic, is_active=is_active,
+                                        is_admin=is_admin, is_superuser=is_superuser, is_staff=is_staff,
+                                        role_id=role_object, role=role, first_name=first_name, middle_name=middle_name,
+                                        last_name=last_name, father_name=father_name,husband_name=husband_name,
+                                        gender=gender, cnic=cnic, Address=address,city=city, mobile_number=mobile_number,
+                                        landline_number=landline_number, user_sign=user_sign, comments=comments)
+    except BaseException as e:
+        raise ValidationError({"Error": e})
 
-    new_token = Token.objects.get_or_create(user=new_user[0])
-    new_user[0].set_password(password)
-    new_user[0].save()
+    new_token = Token.objects.create(user=new_user)
+    new_user.set_password(password)
+    new_user.save()
     data = dict()
     data['message'] = "User registered successfully"
     data['username'] = username
-    data['token'] = new_token[0].key
-    return Response(data)
+    data['token'] = new_token.key
+    return Response(data, content_type='application/json', status=201)
 
 
 @api_view(['GET'])
@@ -138,17 +133,18 @@ def create_user(request):
 @permission_classes([IsAdminUser])
 def show_users(request):
     users_objects = Users.objects.all()
-    users = serializers.serialize("json", users_objects)
-    return Response(json.loads(users), content_type='application/json')
+    users = UsersSerializer(instance=users_objects, many=True)
+    return Response(users.data, content_type='application/json', status=200)
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @user_role(["Director"])
-def show_user(request, id_):
-    user_object = Users.objects.filter(id=id_)
-    user = serializers.serialize("json", user_object)
-    return Response(json.loads(user), content_type='application/json', status=200)
+def show_user(request):
+    id_=request.GET.get('id_')
+    user_object = Users.objects.get(id=id_)
+    serialized_user=UsersSerializer(instance=user_object)
+    return Response(serialized_user.data, content_type='application/json', status=200)
 
 
 @api_view(['GET'])
@@ -164,14 +160,14 @@ def decorator_test(request):
 @api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
-def update_user(request, id_):
+def update_user(request):
     try:
+        id_ = request.GET.get('id_')
         user = Users.objects.get(id=id_)
-        if not user:
-            return Response({"Message": "User doesn't exists !!!"})
-    except Users.DoesNotExist:
-        return Response({"message": "database or payload error !!!"})
+    except BaseException as e:
+        raise ValidationError({"Error": e})
 
+    # WE may need to implement try and except for each field here
     user.username = request.POST['username']
     user.email = request.POST['email']
     user.profile_pic = request.FILES['profile_pic']
@@ -202,22 +198,21 @@ def update_user(request, id_):
     data['message'] = "User updated successfully"
     data['username'] = user.username
     data['email'] = user.email
-    return Response(data)
+    return Response(data, content_type='application/json', status=200)
 
 
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
-def delete_user(request, id_):
-    data = {}
+def delete_user(request):
+    id_ = request.GET.get('_id')
     try:
         user = Users.objects.get(id=id_)
-    except Users.DoesNotExist:
-        return Response({"Message": "User doesn't exists !!!"})
+    except BaseException as e:
+        raise ValidationError({"Error": e})
     user.is_deleted = True
     user.save()
-    data['message'] = "User deleted successfully"
-    return Response(data)
+    return Response({"Message": "User deleted"}, content_type='application/json', status=204)
 
 
 # UserRoles APIs
@@ -225,22 +220,25 @@ def delete_user(request, id_):
 
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
-@permission_classes([IsAdminUser])
+@user_role(["Director"])
 def create_user_role(request):
     data = {}
     request_body = json.loads(request.body)
     role = request_body["role"]
     mysql_id = request_body["mysql_id"]
     role_short = request_body["role_short"]
-    new_user_role = UserRoles.objects.get_or_create(role=role, mysql_id=mysql_id, role_short=role_short)
-    if not new_user_role[1]:
-        return Response({'Message': 'User Role already exists'})
+    try:
+        new_user_role = UserRoles.objects.create(role=role, mysql_id=mysql_id, role_short=role_short)
+        if new_user_role:
+            return Response({"Message": "User role already exist"}, content_type='application/json', status=409)
+    except BaseException as e:
+        raise ValidationError({'Error': e})
     else:
         data["message"] = "User Role create successfully !!!"
         data["role"] = role
         data["mysql_id"] = mysql_id
         data["role_short"] = role_short
-        return Response(data, content_type='application/json')
+        return Response(data, content_type='application/json', status=201)
 
 
 @api_view(['GET'])
@@ -249,47 +247,54 @@ def create_user_role(request):
 def show_users_roles(request):
     users_roles_objects = UserRoles.objects.all()
     users_roles = serializers.serialize("json", users_roles_objects)
-    return Response(json.loads(users_roles), content_type='application/json')
+    return Response(json.loads(users_roles), content_type='application/json', status=200)
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @user_role(["Director"])
-def show_user_role(request, id_):
-    user_role_object = UserRoles.objects.filter(id=id_)
+def show_user_role(request):
+    id_ = request.GET.get("id_")
+    try:
+        user_role_object = UserRoles.objects.filter(id=id_)
+    except BaseException as e:
+        raise ValidationError({'Error': e})
     users_role = serializers.serialize("json", user_role_object)
-    return Response(json.loads(users_role), content_type='application/json')
+    return Response(json.loads(users_role), content_type='application/json', status=200)
 
 
 @api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
-@permission_classes([IsAdminUser])
+@user_role(["Director"])
 def update_user_role(request):
     data = {}
+    id_ = request.GET.get("id_")
     request_body = json.loads(request.body)
-    user_role_id = request_body["id"]
-
     try:
-        user_role = UserRoles.objects.get(id=user_role_id)
-    except UserRoles.DoesNotExist:
-        return Response({"message": "user role not found !!!"})
+        user_role = UserRoles.objects.get(id=id_)
+    except BaseException as e:
+        raise ValidationError({'Error': e})
 
     user_role.role = request_body["role"]
     user_role.mysql_id = request_body["mysql_id"]
     user_role.role_short = request_body["role_short"]
     user_role.save()
     data["message"] = "User Role Updated successfully !!!"
-    return Response(data, content_type='application/json')
+    return Response(data, content_type='application/json', status=200)
 
 
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
-def delete_user_role(request, id_):
-    user_role_object = UserRoles.objects.get(id=id_)
+def delete_user_role(request):
+    id_ = request.GET.get("id_")
+    try:
+        user_role_object = UserRoles.objects.get(id=id_)
+    except BaseException as e:
+        raise ValidationError({'Error': e})
     user_role_object.is_deleted = True
     user_role_object.save()
-    return Response({"Message": "User Role deleted successfully !!!"}, content_type='application/json')
+    return Response({"Message": "User role deleted"}, content_type='application/json', status=204)
                                                               
 
 """
