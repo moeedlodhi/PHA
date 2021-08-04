@@ -51,7 +51,7 @@ CHOICE_GENDER = (('male', 'male'), ('female', 'female'))
 
 class Users(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=30, unique=True)
-    email = models.EmailField(null=True, blank=True)
+    email = models.EmailField(unique=True)
     profile_pic = models.ImageField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
