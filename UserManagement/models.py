@@ -74,7 +74,7 @@ class Users(AbstractBaseUser, PermissionsMixin):
     landline_number = models.CharField(max_length=264, null=True, blank=True)
     user_sign = models.ImageField(null=True, blank=True)
     status = models.IntegerField(null=True, blank=True)
-    comments = models.CharField(max_length=2640, null=True, blank=True)
+    comments = models.CharField(max_length=5000, null=True, blank=True)
     created_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
 
