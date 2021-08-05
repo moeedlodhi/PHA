@@ -1,28 +1,22 @@
-import json
-
 import mysql.connector
 from mysql.connector import Error
-from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.decorators import authentication_classes
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from django.contrib.auth.hashers import check_password
-from django.core import serializers
-from rest_framework.exceptions import ValidationError
 from django.contrib.auth import login, logout
-from rest_framework.permissions import AllowAny
+from django.contrib.auth.hashers import check_password
 from rest_framework.authentication import TokenAuthentication
-from django.http import JsonResponse
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 from fees.models import installments, documents
 from process.models import process_types, process, process_types_meta, process_comments
 from societies.models import user_societies, society, report_user_process, zones, plot_size,\
     plots, members, member_plots, member_meta, member_activity, payments, letters, contacts
-from UserManagement.decorators import user_role
+from UserManagement.decorators import check_token_expiry, user_role
 from UserManagement.models import Users, UserRoles, settings
 from UserManagement.utils import face_recognize, token_expire_handler
-from UserManagement.serializers import UsersSerializer
+from UserManagement.serializers import UsersSerializer, UsersRoleSerializer
 
 
 # Create your views here.
@@ -30,7 +24,6 @@ from UserManagement.serializers import UsersSerializer
 @permission_classes([AllowAny])
 @authentication_classes([TokenAuthentication])
 def login_user(request):
-    data = {}
     username = request.POST['username']
     password = request.POST['password']
     image = request.FILES['image']
@@ -48,11 +41,8 @@ def login_user(request):
         if account.is_active and not account.is_deleted:
             if face_recognize(account.profile_pic.url, image):
                 login(request, account)
-                data["message"] = "User logged in"
-                data["username"] = account.username
-                data['id'] = account.id
-                data['token'] = user_token
-                return Response(data)
+                return Response({"message": "User Successfully logged in", "token": user_token},
+                                content_type='application/json', status=200)
             else:
                 raise ValidationError({"Error": f'Face not recognize'})
         else:
@@ -67,7 +57,7 @@ def login_user(request):
 def logout_user(request):
     request.user.auth_token.delete()
     logout(request)
-    return JsonResponse({"Message": "User Successfully logout !!!"})
+    return Response({"Message": "User Successfully logout"}, content_type='application/json', status=200)
 
 
 @api_view(["GET"])
@@ -76,12 +66,12 @@ def logout_user(request):
 def is_token_expire(request):
     token = Token.objects.get(user=request.user)
     is_expire = token_expire_handler(token)
-    return Response({"is_expire": is_expire})
+    return Response({"is_expire": is_expire}, content_type='application/json', status=200)
 
 
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
-@permission_classes([IsAdminUser])
+@user_role(['Admin'])
 def create_user(request):
 
     username = request.POST['username']
@@ -112,44 +102,49 @@ def create_user(request):
         new_user = Users.objects.create(username=username, email=email, profile_pic=profile_pic, is_active=is_active,
                                         is_admin=is_admin, is_superuser=is_superuser, is_staff=is_staff,
                                         role_id=role_object, role=role, first_name=first_name, middle_name=middle_name,
-                                        last_name=last_name, father_name=father_name,husband_name=husband_name,
-                                        gender=gender, cnic=cnic, Address=address,city=city, mobile_number=mobile_number,
-                                        landline_number=landline_number, user_sign=user_sign, comments=comments)
+                                        last_name=last_name, father_name=father_name, husband_name=husband_name,
+                                        gender=gender, cnic=cnic, Address=address, city=city,
+                                        mobile_number=mobile_number, landline_number=landline_number,
+                                        user_sign=user_sign, comments=comments)
     except BaseException as e:
         raise ValidationError({"Error": e})
 
     new_token = Token.objects.create(user=new_user)
     new_user.set_password(password)
     new_user.save()
-    data = dict()
-    data['message'] = "User registered successfully"
-    data['username'] = username
-    data['token'] = new_token.key
-    return Response(data, content_type='application/json', status=201)
+    return Response({"message": "User registered successfully", "token": new_token.key},
+                    content_type='application/json', status=201)
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
-@permission_classes([IsAdminUser])
+@user_role(['Admin'])
+# @check_token_expiry()
 def show_users(request):
-    users_objects = Users.objects.all()
-    users = UsersSerializer(instance=users_objects, many=True)
-    return Response(users.data, content_type='application/json', status=200)
+    try:
+        users_objects = Users.objects.all()
+    except BaseException as e:
+        raise ValidationError({"Error": e})
+    serialized_users = UsersSerializer(instance=users_objects, many=True)
+    return Response(serialized_users.data, content_type='application/json', status=200)
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
-@user_role(["Director"])
+@user_role(["Admin"])
 def show_user(request):
-    id_=request.GET.get('id_')
-    user_object = Users.objects.get(id=id_)
-    serialized_user=UsersSerializer(instance=user_object)
+    id_ = request.GET.get('id_')
+    try:
+        user_object = Users.objects.get(id=id_)
+    except BaseException as e:
+        raise ValidationError({"Error": e})
+    serialized_user = UsersSerializer(instance=user_object)
     return Response(serialized_user.data, content_type='application/json', status=200)
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
-@user_role(["to", "ad", "Director"])
+@user_role(['Admin'])
 def decorator_test(request):
     """
     this is doc string
@@ -159,7 +154,7 @@ def decorator_test(request):
 
 @api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
-@permission_classes([IsAdminUser])
+@user_role(['Admin'])
 def update_user(request):
     try:
         id_ = request.GET.get('id_')
@@ -192,27 +187,25 @@ def update_user(request):
     user.comments = request.POST['comments']
     password = request.POST['password']
 
-    data = {}
     user.set_password(password)
     user.save()
-    data['message'] = "User updated successfully"
-    data['username'] = user.username
-    data['email'] = user.email
-    return Response(data, content_type='application/json', status=200)
+    return Response({"message": "User updated successfully"}, content_type='application/json', status=200)
 
 
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
-@permission_classes([IsAdminUser])
+@user_role(['Admin'])
 def delete_user(request):
     id_ = request.GET.get('_id')
     try:
         user = Users.objects.get(id=id_)
+        token = Token.objects.get(user=user)
     except BaseException as e:
         raise ValidationError({"Error": e})
+    token.delete()
     user.is_deleted = True
     user.save()
-    return Response({"Message": "User deleted"}, content_type='application/json', status=204)
+    return Response({"message": "User deleted successfully"}, content_type='application/json', status=204)
 
 
 # UserRoles APIs
@@ -220,72 +213,66 @@ def delete_user(request):
 
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
-@user_role(["Director"])
+@user_role(['Admin'])
 def create_user_role(request):
-    data = {}
-    request_body = json.loads(request.body)
-    role = request_body["role"]
-    mysql_id = request_body["mysql_id"]
-    role_short = request_body["role_short"]
+    role = request.POST["role"]
+    mysql_id = request.POST["mysql_id"]
+    role_short = request.POST["role_short"]
     try:
         new_user_role = UserRoles.objects.create(role=role, mysql_id=mysql_id, role_short=role_short)
         if new_user_role:
-            return Response({"Message": "User role already exist"}, content_type='application/json', status=409)
+            return Response({"message": "User role already exist"}, content_type='application/json', status=409)
     except BaseException as e:
         raise ValidationError({'Error': e})
-    else:
-        data["message"] = "User Role create successfully !!!"
-        data["role"] = role
-        data["mysql_id"] = mysql_id
-        data["role_short"] = role_short
-        return Response(data, content_type='application/json', status=201)
+
+    return Response({"message": "User Role created successfully"}, content_type='application/json', status=201)
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
-@permission_classes([IsAdminUser])
+@user_role(['Admin'])
 def show_users_roles(request):
-    users_roles_objects = UserRoles.objects.all()
-    users_roles = serializers.serialize("json", users_roles_objects)
-    return Response(json.loads(users_roles), content_type='application/json', status=200)
+    try:
+        users_roles_objects = UserRoles.objects.all()
+    except BaseException as e:
+        raise ValidationError({'Error': e})
+    serialized_users_roles = UsersRoleSerializer(instance=users_roles_objects, many=True)
+    return Response(serialized_users_roles.data, content_type='application/json', status=200)
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
-@user_role(["Director"])
+@user_role(['Admin'])
 def show_user_role(request):
     id_ = request.GET.get("id_")
     try:
-        user_role_object = UserRoles.objects.filter(id=id_)
+        user_role_object = UserRoles.objects.get(id=id_)
     except BaseException as e:
         raise ValidationError({'Error': e})
-    users_role = serializers.serialize("json", user_role_object)
-    return Response(json.loads(users_role), content_type='application/json', status=200)
+    serialized_users_roles = UsersRoleSerializer(instance=user_role_object)
+    return Response(serialized_users_roles.data, content_type='application/json', status=200)
 
 
 @api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
-@user_role(["Director"])
+@user_role(['Admin'])
 def update_user_role(request):
-    data = {}
-    id_ = request.GET.get("id_")
-    request_body = json.loads(request.body)
     try:
+        id_ = request.GET.get("id_")
         user_role = UserRoles.objects.get(id=id_)
     except BaseException as e:
         raise ValidationError({'Error': e})
 
-    user_role.role = request_body["role"]
-    user_role.mysql_id = request_body["mysql_id"]
-    user_role.role_short = request_body["role_short"]
+    user_role.role = request.POST['role']
+    user_role.mysql_id = request.POST['mysql_id']
+    user_role.role_short = request.POST['role_short']
     user_role.save()
-    data["message"] = "User Role Updated successfully !!!"
-    return Response(data, content_type='application/json', status=200)
+    return Response({"message": "User Role Updated successfully"}, content_type='application/json', status=200)
 
 
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
-@permission_classes([IsAdminUser])
+@user_role(['Admin'])
 def delete_user_role(request):
     id_ = request.GET.get("id_")
     try:
@@ -294,8 +281,8 @@ def delete_user_role(request):
         raise ValidationError({'Error': e})
     user_role_object.is_deleted = True
     user_role_object.save()
-    return Response({"Message": "User role deleted"}, content_type='application/json', status=204)
-                                                              
+    return Response({"message": "User role deleted"}, content_type='application/json', status=204)
+
 
 """
 
