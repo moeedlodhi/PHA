@@ -6,14 +6,14 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from fees.models import installments, documents
 from process.models import process_types, process, process_types_meta, process_comments
 from societies.models import user_societies, society, report_user_process, zones, plot_size,\
     plots, members, member_plots, member_meta, member_activity, payments, letters, contacts
-from UserManagement.decorators import check_token_expiry, user_role
+from PHA.decorators import user_role
 from UserManagement.models import Users, UserRoles, settings
 from UserManagement.utils import face_recognize, token_expire_handler
 from UserManagement.serializers import UsersSerializer, UsersRoleSerializer
@@ -73,33 +73,97 @@ def is_token_expire(request):
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
 def create_user(request):
-
-    username = request.POST['username']
-    email = request.POST['email']
-    profile_pic = request.FILES['profile_pic']
-    is_active = request.POST['is_active']
-    is_admin = request.POST['is_admin']
-    is_superuser = request.POST['is_superuser']
-    is_staff = request.POST['is_staff']
-    role_id = request.POST['role_id']
-    role_object = UserRoles.objects.get(id=role_id)
-    role = request.POST['role']
-    first_name = request.POST['first_name']
-    middle_name = request.POST['middle_name']
-    last_name = request.POST['last_name']
-    father_name = request.POST['father_name']
-    husband_name = request.POST['husband_name']
-    gender = request.POST['gender']
-    cnic = request.POST['cnic']
-    address = request.POST['address']
-    city = request.POST['city']
-    mobile_number = request.POST['mobile_number']
-    landline_number = request.POST['landline_number']
-    user_sign = request.FILES['user_sign']
-    comments = request.POST['comments']
-    password = request.POST['password']
     try:
-        new_user = Users.objects.create(username=username, email=email, profile_pic=profile_pic, is_active=is_active,
+        username = request.POST['username']
+        email = request.POST['email']
+    except:
+        raise ValidationError('username or email missing')
+    try:
+        profile_pic = request.FILES['profile_pic']
+    except:
+        profile_pic = None
+    try:
+        is_admin = request.POST['is_admin']
+    except:
+        is_admin = False
+    try:
+        is_superuser = request.POST['is_superuser']
+    except:
+        is_superuser = False
+    try:
+        is_staff = request.POST['is_staff']
+    except:
+        is_staff = False
+    try:
+        role_id = request.POST['role_id']
+    except:
+        role_id = None
+    try:
+        role_object = UserRoles.objects.get(id=role_id)
+    except:
+        role_object = None
+    try:
+        role = request.POST['role']
+    except:
+        role = None
+    try:
+        first_name = request.POST['first_name']
+    except:
+        first_name = None
+    try:
+        middle_name = request.POST['middle_name']
+    except:
+        middle_name = None
+    try:
+        last_name = request.POST['last_name']
+    except:
+        last_name = None
+    try:
+        father_name = request.POST['father_name']
+    except:
+        father_name = None
+    try:
+        husband_name = request.POST['husband_name']
+    except:
+        husband_name = None
+    try:
+        gender = request.POST['gender']
+    except:
+        gender = None
+    try:
+        cnic = request.POST['cnic']
+    except:
+        cnic = None
+    try:
+        address = request.POST['address']
+    except:
+        address = None
+    try:
+        city = request.POST['city']
+    except:
+        city = None
+    try:
+        mobile_number = request.POST['mobile_number']
+    except:
+        mobile_number = None
+    try:
+        landline_number = request.POST['landline_number']
+    except:
+        landline_number = None
+    try:
+        user_sign = request.FILES['user_sign']
+    except:
+        user_sign = None
+    try:
+        comments = request.POST['comments']
+    except:
+        comments = None
+    try:
+        password = request.POST['password']
+    except:
+        raise ValidationError({"message": "Please Enter Password"})
+    try:
+        new_user = Users.objects.create(username=username, email=email, profile_pic=profile_pic, is_active=True,
                                         is_admin=is_admin, is_superuser=is_superuser, is_staff=is_staff,
                                         role_id=role_object, role=role, first_name=first_name, middle_name=middle_name,
                                         last_name=last_name, father_name=father_name, husband_name=husband_name,
@@ -161,33 +225,102 @@ def update_user(request):
         user = Users.objects.get(id=id_)
     except BaseException as e:
         raise ValidationError({"Error": e})
-
-    # WE may need to implement try and except for each field here
-    user.username = request.POST['username']
-    user.email = request.POST['email']
-    user.profile_pic = request.FILES['profile_pic']
-    user.is_active = request.POST['is_active']
-    user.is_admin = request.POST['is_admin']
-    user.is_superuser = request.POST['is_superuser']
-    user.is_staff = request.POST['is_staff']
-    role_id = request.POST['role_id']
-    user.role_id = UserRoles.objects.get(id=role_id)
-    user.role = request.POST['role']
-    user.first_name = request.POST['first_name']
-    user.middle_name = request.POST['middle_name']
-    user.last_name = request.POST['last_name']
-    user.father_name = request.POST['father_name']
-    user.husband_name = request.POST['husband_name']
-    user.gender = request.POST['gender']
-    user.cnic = request.POST['cnic']
-    user.address = request.POST['address']
-    user.city = request.POST['city']
-    user.mobile_number = request.POST['mobile_number']
-    user.landline_number = request.POST['landline_number']
-    user.comments = request.POST['comments']
-    password = request.POST['password']
-
-    user.set_password(password)
+    try:
+        user.username = request.POST['username']
+    except:
+        pass
+    try:
+        user.email = request.POST['email']
+    except:
+        pass
+    try:
+        user.profile_pic = request.FILES['profile_pic']
+    except:
+        pass
+    try:
+        user.is_active = request.POST['is_active']
+    except:
+        pass
+    try:
+        user.is_admin = request.POST['is_admin']
+    except:
+        pass
+    try:
+        user.is_superuser = request.POST['is_superuser']
+    except:
+        pass
+    try:
+        user.is_staff = request.POST['is_staff']
+    except:
+        pass
+    try:
+        role_id = request.POST['role_id']
+    except:
+        pass
+    try:
+        user.role_id = UserRoles.objects.get(id=role_id)
+    except:
+        pass
+    try:
+        user.role = request.POST['role']
+    except:
+        pass
+    try:
+        user.first_name = request.POST['first_name']
+    except:
+        pass
+    try:
+        user.middle_name = request.POST['middle_name']
+    except:
+        pass
+    try:
+        user.last_name = request.POST['last_name']
+    except:
+        pass
+    try:
+        user.father_name = request.POST['father_name']
+    except:
+        pass
+    try:
+        user.husband_name = request.POST['husband_name']
+    except:
+        pass
+    try:
+        user.gender = request.POST['gender']
+    except:
+        pass
+    try:
+        user.cnic = request.POST['cnic']
+    except:
+        pass
+    try:
+        user.address = request.POST['address']
+    except:
+        pass
+    try:
+        user.city = request.POST['city']
+    except:
+        pass
+    try:
+        user.mobile_number = request.POST['mobile_number']
+    except:
+        pass
+    try:
+        user.landline_number = request.POST['landline_number']
+    except:
+        pass
+    try:
+        user.comments = request.POST['comments']
+    except:
+        pass
+    try:
+        password = request.POST['password']
+    except:
+        pass
+    try:
+        user.set_password(password)
+    except:
+        pass
     user.save()
     return Response({"message": "User updated successfully"}, content_type='application/json', status=200)
 
@@ -217,9 +350,12 @@ def delete_user(request):
 def create_user_role(request):
     try:
         role = request.POST["role"]
-        mysql_id = request.POST["mysql_id"]
         role_short = request.POST["role_short"]
-        new_user_role = UserRoles.objects.get_or_create(role=role, mysql_id=mysql_id, role_short=role_short)
+        users_role = UserRoles.objects.get(role=role, role_short=role_short)
+        if users_role:
+            return Response({"message": "user role already exist.", "status code": 404})
+        else:
+            UserRoles.objects.get_or_create(role=role, role_short=role_short)
     except BaseException as e:
         raise ValidationError({'Error': e})
 
@@ -258,13 +394,17 @@ def update_user_role(request):
     try:
         id_ = request.GET.get("id_")
         user_role = UserRoles.objects.get(id=id_)
-        user_role.role = request.POST['role']
-        user_role.mysql_id = request.POST['mysql_id']
-        user_role.role_short = request.POST['role_short']
-        user_role.save()
     except BaseException as e:
         raise ValidationError({'Error': e})
-
+    try:
+        user_role.role = request.POST['role']
+    except:
+        pass
+    try:
+        user_role.role_short = request.POST['role_short']
+    except:
+        pass
+    user_role.save()
     return Response({"message": "User Role Updated successfully"}, content_type='application/json', status=200)
 
 
@@ -272,14 +412,14 @@ def update_user_role(request):
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
 def delete_user_role(request):
-    id_ = request.GET.get("id_")
     try:
+        id_ = request.GET.get("id_")
         user_role_object = UserRoles.objects.get(id=id_)
     except BaseException as e:
         raise ValidationError({'Error': e})
     user_role_object.is_deleted = True
     user_role_object.save()
-    return Response({"message": "User role deleted"}, content_type='application/json', status=204)
+    return Response({"message": "User role deleted"}, content_type='application/json', status=1000)
 
 
 """
