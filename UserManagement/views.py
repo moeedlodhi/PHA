@@ -13,7 +13,7 @@ from fees.models import installments, documents
 from process.models import process_types, process, process_types_meta, process_comments
 from societies.models import user_societies, society, report_user_process, zones, plot_size,\
     plots, members, member_plots, member_meta, member_activity, payments, letters, contacts
-from PHA.decorators import user_role
+from PHA.decorators import user_role, check_token_expiry
 from PHA.utils import Response_custom
 from UserManagement.models import Users, UserRoles, settings
 from UserManagement.utils import face_recognize, token_expire_handler
@@ -75,12 +75,13 @@ def is_token_expire(request):
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
+@check_token_expiry()
 def create_user(request):
     try:
         username = request.POST['username']
         email = request.POST['email']
     except:
-        return Response(Response_custom("username of email missing","200"))
+        return Response(response_body("", "error", "username or email is missing", 400))
     try:
         profile_pic = request.FILES['profile_pic']
     except:
@@ -164,7 +165,7 @@ def create_user(request):
     try:
         password = request.POST['password']
     except:
-        return Response(Response_custom("Please Enter password","200"))
+        return Response(response_body("", "error", "please enter password", 400))
     try:
         new_user = Users.objects.create(username=username, email=email, profile_pic=profile_pic, is_active=True,
                                         is_admin=is_admin, is_superuser=is_superuser, is_staff=is_staff,
@@ -173,60 +174,68 @@ def create_user(request):
                                         gender=gender, cnic=cnic, Address=address, city=city,
                                         mobile_number=mobile_number, landline_number=landline_number,
                                         user_sign=user_sign, comments=comments)
-    except BaseException as e:
-        Response(Response_custom("User couldnot be created","200"))
+    except:
+        return Response(response_body("", "error", "user couldn't be created", 400))
 
-    new_token = Token.objects.create(user=new_user)
+    Token.objects.create(user=new_user)
     new_user.set_password(password)
     new_user.save()
-    return Response(Response_custom("User created successfully","200"))
+    return Response(response_body("", "success", "user created successfully", 1000))
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
-# @check_token_expiry()
+@check_token_expiry()
 def show_users(request):
     try:
         users_objects = Users.objects.all()
         serialized_users = UsersSerializer(instance=users_objects, many=True).data
-    except BaseException as e:
-        raise ValidationError({"Error": e})
-    return Response(Response_custom("Success","200",serialized_users))
+    except:
+        return Response(response_body("", "error", "couldn't fetch users from database"), 400)
+    return Response(response_body(serialized_users, "success", "fetch users from database", 1000))
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @user_role(["Admin"])
+@check_token_expiry()
 def show_user(request):
     try:
         id_ = request.GET.get('id_')
         user_object = Users.objects.get(id=id_)
         serialized_user = UsersSerializer(instance=user_object).data
-    except BaseException as e:
-        raise ValidationError({"Error": e})
-    return Response(Response_custom("User created successfully","200",serialized_user))
+    except:
+        return Response(response_body("", "error", "couldn't fetch users from database", 400))
+    return Response(response_body(serialized_user, "success", "fetch user from database", 1000))
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
+@check_token_expiry()
 def decorator_test(request):
     """
     this is doc string
     """
-    return Response({"Message": "you have access"})
+    return Response(response_body("", "message", "you have access", 1000))
+
+
+from django.db import IntegrityError
 
 
 @api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
+@check_token_expiry()
 def update_user(request):
     try:
         id_ = request.GET.get('id_')
+        if not id_:
+            return Response(response_body("", "error", "id is not provided", 400))
         user = Users.objects.get(id=id_)
-    except BaseException as e:
-        raise ValidationError({"Error": e})
+    except:
+        return Response(response_body("", "error", "couldn't fetch user from database", 400))
     try:
         user.username = request.POST['username']
     except:
@@ -324,23 +333,26 @@ def update_user(request):
     except:
         pass
     user.save()
-    return Response({"message": "User updated successfully"}, content_type='application/json', status=200)
+    return Response(response_body("", "success", "user updated successfully", 1000))
 
 
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
+@check_token_expiry()
 def delete_user(request):
-    id_ = request.GET.get('_id')
     try:
+        id_ = request.GET.get('id_')
+        if not id_:
+            return Response(response_body("", "error", "id is not provided", 400))
         user = Users.objects.get(id=id_)
         token = Token.objects.get(user=user)
-    except BaseException as e:
-        raise ValidationError({"Error": e})
+    except:
+        return Response(response_body("", "error", "couldn't fetch user from database", 400))
     token.delete()
     user.is_deleted = True
     user.save()
-    return Response({"message": "User deleted successfully"}, content_type='application/json', status=204)
+    return Response(response_body("", "success", "user deleted successfully", 1000))
 
 
 # UserRoles APIs
@@ -349,55 +361,60 @@ def delete_user(request):
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
+@check_token_expiry()
 def create_user_role(request):
     try:
         role = request.POST["role"]
+        if not role:
+            return Response(response_body("", "error", "user role is not provided", 400))
         role_short = request.POST["role_short"]
-        users_role = UserRoles.objects.get(role=role, role_short=role_short)
-        if users_role:
-            return Response({"message": "user role already exist.", "status code": 404})
-        else:
-            UserRoles.objects.get_or_create(role=role, role_short=role_short)
-    except BaseException as e:
-        raise ValidationError({'Error': e})
-
-    return Response(Response_custom("User Role created successfully","200"))
+        if not role_short:
+            return Response(response_body("", "error", "user role short is not provided", 400))
+        UserRoles.objects.get_or_create(role=role, role_short=role_short)
+    except:
+        return Response(response_body("", "error", "couldn't fetch user role from database", 400))
+    return Response(response_body("", "success", "user role created successfully", 1000))
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
+@check_token_expiry()
 def show_users_roles(request):
     try:
         users_roles_objects = UserRoles.objects.all()
         serialized_users_roles = UsersRoleSerializer(instance=users_roles_objects, many=True).data
-    except BaseException as e:
-        raise ValidationError({'Error': e})
-    return Response(Response_custom("Success","200",serialized_users_roles))
+    except:
+        return Response(response_body("", "error", "couldn't fetch users roles from database", 400))
+    return Response(response_body(serialized_users_roles, "success", "fetch users roles from database", 1000))
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
+@check_token_expiry()
 def show_user_role(request):
     id_ = request.GET.get("id_")
     try:
         user_role_object = UserRoles.objects.get(id=id_)
         serialized_users_roles = UsersRoleSerializer(instance=user_role_object).data
-    except BaseException as e:
-        raise ValidationError({'Error': e})
-    return Response(Response_custom("Success","200",serialized_users_roles))
+    except:
+        return Response(response_body("", "error", "couldn't fetch user role from database", 400))
+    return Response(response_body(serialized_users_roles, "success", "fetch user role from database", 1000))
 
 
 @api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
+@check_token_expiry()
 def update_user_role(request):
     try:
         id_ = request.GET.get("id_")
+        if not id_:
+            return Response(response_body("", "error", "id is not provided", 400))
         user_role = UserRoles.objects.get(id=id_)
-    except BaseException as e:
-        raise ValidationError({'Error': e})
+    except:
+        return Response(response_body("", "error", "couldn't fetch user role from database", 400))
     try:
         user_role.role = request.POST['role']
     except:
@@ -407,21 +424,22 @@ def update_user_role(request):
     except:
         pass
     user_role.save()
-    return Response({"message": "User Role Updated successfully"}, content_type='application/json', status=200)
+    return Response(response_body("", "success", "user role updated successfully", 1000))
 
 
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
 @user_role(['Admin'])
+@check_token_expiry()
 def delete_user_role(request):
     try:
         id_ = request.GET.get("id_")
         user_role_object = UserRoles.objects.get(id=id_)
     except BaseException as e:
-        raise ValidationError({'Error': e})
+        return Response(response_body("", "error", "user role couldn't fetch from database", 400))
     user_role_object.is_deleted = True
     user_role_object.save()
-    return Response(Response_custom("User Role deleted successfully","200"))
+    return Response(response_body("", "success", "user role deleted successfully", 1000))
 
 
 """
