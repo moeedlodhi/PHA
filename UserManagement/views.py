@@ -14,6 +14,7 @@ from process.models import process_types, process, process_types_meta, process_c
 from societies.models import user_societies, society, report_user_process, zones, plot_size,\
     plots, members, member_plots, member_meta, member_activity, payments, letters, contacts
 from PHA.decorators import user_role
+from PHA.utils import Response_custom
 from UserManagement.models import Users, UserRoles, settings
 from UserManagement.utils import face_recognize, token_expire_handler
 from UserManagement.serializers import UsersSerializer, UsersRoleSerializer
@@ -30,18 +31,20 @@ def login_user(request):
     image = request.FILES['image']
     try:
         account = Users.objects.get(username=username)
-    except BaseException as e:
-        return Response(response_body("", "error", str(e), 400))
+    except :
+        return Response(response_body("", "error", "incorrect username", 400))
+
+    if not check_password(password, account.password):
+        return Response(response_body("", "error", "incorrect password", 400))
+    if not face_recognize(account.profile_pic.url, image):
+        return Response(response_body("", "error", "image doesn't match", 400))
     try:
         token, _ = Token.objects.get_or_create(user=account)
         user_token = token.key
     except BaseException as e:
         return Response(response_body("", "error", str(e), 400))
 
-    if not check_password(password, account.password):
-        return Response(response_body("", "error", "incorrect login credentials", 400))
-
-    if account and account.is_active and not account.is_deleted and face_recognize(account.profile_pic.url, image):
+    if account and account.is_active and not account.is_deleted:
         login(request, account)
         return Response(response_body({"token": user_token}, "success", "user logged in successfully", 1000))
     else:
@@ -56,7 +59,7 @@ def logout_user(request):
         request.user.auth_token.delete()
         logout(request)
     except BaseException as e:
-        return Response(response_body("", "error", e, 400))
+        return Response(response_body("", "error", str(e), 400))
     return Response(response_body("", "success", "user logout successfully", 1000))
 
 
