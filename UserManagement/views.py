@@ -14,6 +14,7 @@ from process.models import process_types, process, process_types_meta, process_c
 from societies.models import user_societies, society, report_user_process, zones, plot_size,\
     plots, members, member_plots, member_meta, member_activity, payments, letters, contacts
 from PHA.decorators import user_role
+from PHA.utils import Response_custom
 from UserManagement.models import Users, UserRoles, settings
 from UserManagement.utils import face_recognize, token_expire_handler
 from UserManagement.serializers import UsersSerializer, UsersRoleSerializer
