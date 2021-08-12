@@ -17,7 +17,7 @@ from PHA.decorators import user_role
 from UserManagement.models import Users, UserRoles, settings
 from UserManagement.utils import face_recognize, token_expire_handler
 from UserManagement.serializers import UsersSerializer, UsersRoleSerializer
-
+from PHA.utils import Response_custom
 
 # Create your views here.
 @api_view(["POST"])
@@ -30,7 +30,7 @@ def login_user(request):
     try:
         account = Users.objects.get(username=username)
     except BaseException as e:
-        raise ValidationError({"Error": f'{str(e)}'})
+        return Response(Response_custom("No account present","200"))
     try:
         token, _ = Token.objects.get_or_create(user=account)
         user_token = token.key
@@ -38,12 +38,11 @@ def login_user(request):
         raise ValidationError({"Error": f'{str(e)}'})
 
     if not check_password(password, account.password):
-        raise ValidationError({"message": "Incorrect Login credentials"})
+        return Response(Response_custom("Incorrect Login Credentials","200"))
 
     if account and account.is_active and not account.is_deleted and face_recognize(account.profile_pic.url, image):
         login(request, account)
-        return Response({"message": "User Successfully logged in", "token": user_token},
-                        content_type='application/json', status=200)
+        return Response(Response_custom("Incorrect Login Credentials","200",{"token":token.key}))
     else:
         raise ValidationError({"Error": f'Account doesnt exist'})
 
@@ -57,7 +56,7 @@ def logout_user(request):
         logout(request)
     except BaseException as e:
         raise ValidationError({"Error": e})
-    return Response({"Message": "User Successfully logout"}, content_type='application/json', status=200)
+    return Response(Response_custom("Logged out successfully","200"))
 
 
 @api_view(["GET"])
@@ -77,7 +76,7 @@ def create_user(request):
         username = request.POST['username']
         email = request.POST['email']
     except:
-        raise ValidationError('username or email missing')
+        return Response(Response_custom("username of email missing","200"))
     try:
         profile_pic = request.FILES['profile_pic']
     except:
@@ -161,7 +160,7 @@ def create_user(request):
     try:
         password = request.POST['password']
     except:
-        raise ValidationError({"message": "Please Enter Password"})
+        return Response(Response_custom("Please Enter password","200"))
     try:
         new_user = Users.objects.create(username=username, email=email, profile_pic=profile_pic, is_active=True,
                                         is_admin=is_admin, is_superuser=is_superuser, is_staff=is_staff,
@@ -171,13 +170,12 @@ def create_user(request):
                                         mobile_number=mobile_number, landline_number=landline_number,
                                         user_sign=user_sign, comments=comments)
     except BaseException as e:
-        raise ValidationError({"Error": e})
+        Response(Response_custom("User couldnot be created","200"))
 
     new_token = Token.objects.create(user=new_user)
     new_user.set_password(password)
     new_user.save()
-    return Response({"message": "User registered successfully", "token": new_token.key},
-                    content_type='application/json', status=201)
+    return Response(Response_custom("User created successfully","200"))
 
 
 @api_view(['GET'])
@@ -190,7 +188,7 @@ def show_users(request):
         serialized_users = UsersSerializer(instance=users_objects, many=True).data
     except BaseException as e:
         raise ValidationError({"Error": e})
-    return Response(serialized_users, content_type='application/json', status=200)
+    return Response(Response_custom("Success","200",serialized_users))
 
 
 @api_view(['GET'])
@@ -203,7 +201,7 @@ def show_user(request):
         serialized_user = UsersSerializer(instance=user_object).data
     except BaseException as e:
         raise ValidationError({"Error": e})
-    return Response(serialized_user, content_type='application/json', status=200)
+    return Response(Response_custom("User created successfully","200",serialized_user))
 
 
 @api_view(['GET'])
@@ -359,7 +357,7 @@ def create_user_role(request):
     except BaseException as e:
         raise ValidationError({'Error': e})
 
-    return Response({"message": "User Role created successfully"}, content_type='application/json', status=201)
+    return Response(Response_custom("User Role created successfully","200"))
 
 
 @api_view(['GET'])
@@ -371,7 +369,7 @@ def show_users_roles(request):
         serialized_users_roles = UsersRoleSerializer(instance=users_roles_objects, many=True).data
     except BaseException as e:
         raise ValidationError({'Error': e})
-    return Response(serialized_users_roles, content_type='application/json', status=200)
+    return Response(Response_custom("Success","200",serialized_users_roles))
 
 
 @api_view(['GET'])
@@ -384,7 +382,7 @@ def show_user_role(request):
         serialized_users_roles = UsersRoleSerializer(instance=user_role_object).data
     except BaseException as e:
         raise ValidationError({'Error': e})
-    return Response(serialized_users_roles, content_type='application/json', status=200)
+    return Response(Response_custom("Success","200",serialized_users_roles))
 
 
 @api_view(["PATCH"])
@@ -419,7 +417,7 @@ def delete_user_role(request):
         raise ValidationError({'Error': e})
     user_role_object.is_deleted = True
     user_role_object.save()
-    return Response({"message": "User role deleted"}, content_type='application/json', status=1000)
+    return Response(Response_custom("User Role deleted successfully","200"))
 
 
 """
