@@ -17,6 +17,7 @@ from PHA.decorators import user_role
 from UserManagement.models import Users, UserRoles, settings
 from UserManagement.utils import face_recognize, token_expire_handler
 from UserManagement.serializers import UsersSerializer, UsersRoleSerializer
+from utils.http import response_body
 
 
 # Create your views here.
@@ -30,22 +31,21 @@ def login_user(request):
     try:
         account = Users.objects.get(username=username)
     except BaseException as e:
-        raise ValidationError({"Error": f'{str(e)}'})
+        return Response(response_body("", "error", str(e), 400))
     try:
         token, _ = Token.objects.get_or_create(user=account)
         user_token = token.key
     except BaseException as e:
-        raise ValidationError({"Error": f'{str(e)}'})
+        return Response(response_body("", "error", str(e), 400))
 
     if not check_password(password, account.password):
-        raise ValidationError({"message": "Incorrect Login credentials"})
+        return Response(response_body("", "error", "incorrect login credentials", 400))
 
     if account and account.is_active and not account.is_deleted and face_recognize(account.profile_pic.url, image):
         login(request, account)
-        return Response({"message": "User Successfully logged in", "token": user_token},
-                        content_type='application/json', status=200)
+        return Response(response_body({"token": user_token}, "success", "user logged in successfully", 1000))
     else:
-        raise ValidationError({"Error": f'Account doesnt exist'})
+        return Response(response_body("", "error", "account doesnt exist", 400))
 
 
 @api_view(["GET"])
@@ -56,8 +56,8 @@ def logout_user(request):
         request.user.auth_token.delete()
         logout(request)
     except BaseException as e:
-        raise ValidationError({"Error": e})
-    return Response({"Message": "User Successfully logout"}, content_type='application/json', status=200)
+        return Response(response_body("", "error", e, 400))
+    return Response(response_body("", "success", "user logout successfully", 1000))
 
 
 @api_view(["GET"])
