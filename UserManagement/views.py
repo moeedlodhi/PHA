@@ -77,7 +77,7 @@ def create_user(request):
         username = request.POST['username']
         email = request.POST['email']
     except:
-        raise ValidationError('username or email missing')
+        return Response(Response_custom("username of email missing","200"))
     try:
         profile_pic = request.FILES['profile_pic']
     except:
@@ -161,7 +161,7 @@ def create_user(request):
     try:
         password = request.POST['password']
     except:
-        raise ValidationError({"message": "Please Enter Password"})
+        return Response(Response_custom("Please Enter password","200"))
     try:
         new_user = Users.objects.create(username=username, email=email, profile_pic=profile_pic, is_active=True,
                                         is_admin=is_admin, is_superuser=is_superuser, is_staff=is_staff,
@@ -171,13 +171,12 @@ def create_user(request):
                                         mobile_number=mobile_number, landline_number=landline_number,
                                         user_sign=user_sign, comments=comments)
     except BaseException as e:
-        raise ValidationError({"Error": e})
+        Response(Response_custom("User couldnot be created","200"))
 
     new_token = Token.objects.create(user=new_user)
     new_user.set_password(password)
     new_user.save()
-    return Response({"message": "User registered successfully", "token": new_token.key},
-                    content_type='application/json', status=201)
+    return Response(Response_custom("User created successfully","200"))
 
 
 @api_view(['GET'])
@@ -190,7 +189,7 @@ def show_users(request):
         serialized_users = UsersSerializer(instance=users_objects, many=True).data
     except BaseException as e:
         raise ValidationError({"Error": e})
-    return Response(serialized_users, content_type='application/json', status=200)
+    return Response(Response_custom("Success","200",serialized_users))
 
 
 @api_view(['GET'])
@@ -203,7 +202,7 @@ def show_user(request):
         serialized_user = UsersSerializer(instance=user_object).data
     except BaseException as e:
         raise ValidationError({"Error": e})
-    return Response(serialized_user, content_type='application/json', status=200)
+    return Response(Response_custom("User created successfully","200",serialized_user))
 
 
 @api_view(['GET'])
@@ -359,7 +358,7 @@ def create_user_role(request):
     except BaseException as e:
         raise ValidationError({'Error': e})
 
-    return Response({"message": "User Role created successfully"}, content_type='application/json', status=201)
+    return Response(Response_custom("User Role created successfully","200"))
 
 
 @api_view(['GET'])
@@ -371,7 +370,7 @@ def show_users_roles(request):
         serialized_users_roles = UsersRoleSerializer(instance=users_roles_objects, many=True).data
     except BaseException as e:
         raise ValidationError({'Error': e})
-    return Response(serialized_users_roles, content_type='application/json', status=200)
+    return Response(Response_custom("Success","200",serialized_users_roles))
 
 
 @api_view(['GET'])
@@ -384,7 +383,7 @@ def show_user_role(request):
         serialized_users_roles = UsersRoleSerializer(instance=user_role_object).data
     except BaseException as e:
         raise ValidationError({'Error': e})
-    return Response(serialized_users_roles, content_type='application/json', status=200)
+    return Response(Response_custom("Success","200",serialized_users_roles))
 
 
 @api_view(["PATCH"])
@@ -419,7 +418,7 @@ def delete_user_role(request):
         raise ValidationError({'Error': e})
     user_role_object.is_deleted = True
     user_role_object.save()
-    return Response({"message": "User role deleted"}, content_type='application/json', status=1000)
+    return Response(Response_custom("User Role deleted successfully","200"))
 
 
 """
